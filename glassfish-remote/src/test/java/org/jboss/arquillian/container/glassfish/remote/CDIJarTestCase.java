@@ -16,18 +16,18 @@
  */
 package org.jboss.arquillian.container.glassfish.remote;
 
+import jakarta.inject.Inject;
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import jakarta.inject.Inject;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@RunWith(Arquillian.class)
+@ExtendWith(ArquillianExtension.class)
 public class CDIJarTestCase {
 
     @Inject
@@ -35,13 +35,15 @@ public class CDIJarTestCase {
 
     @Deployment
     public static JavaArchive deploy() {
-        return ShrinkWrap.create(JavaArchive.class, "foo.jar").addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml")
+        return ShrinkWrap
+            .create(JavaArchive.class, "foo.jar")
+            .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml")
             .addClasses(SimpleBean.class, CDIJarTestCase.class);
     }
 
     @Test
     public void test() {
-        Assert.assertNotNull(foo);
+        assertNotNull(foo);
     }
 }
 

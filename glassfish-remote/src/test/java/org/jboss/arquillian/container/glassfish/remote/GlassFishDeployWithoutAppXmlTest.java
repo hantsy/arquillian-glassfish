@@ -17,19 +17,19 @@
 package org.jboss.arquillian.container.glassfish.remote;
 
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * A test to serve as a regression test for ARQ-658.
@@ -45,14 +45,15 @@ import static org.junit.Assert.assertNotNull;
  *
  * @author Vineet Reynolds
  */
-@RunWith(Arquillian.class)
+@ExtendWith(ArquillianExtension.class)
 public class GlassFishDeployWithoutAppXmlTest {
     @Inject
     private Client client;
 
     @Deployment
     public static EnterpriseArchive createTestArchive() {
-        JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "test.jar")
+        JavaArchive jar = ShrinkWrap
+            .create(JavaArchive.class, "test.jar")
             .addClasses(Client.class, GlassFishDeployWithoutAppXmlTest.class)
             .addAsManifestResource(EmptyAsset.INSTANCE, ArchivePaths.create("beans.xml"));
         EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class, "test.ear").addAsLibrary(jar);

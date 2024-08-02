@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <!-- Parent -->
   <parent>
     <groupId>org.jboss</groupId>
     <artifactId>jboss-parent</artifactId>
     <version>46</version>
-    <relativePath />
+    <relativePath/>
   </parent>
 
   <!-- Model Version -->
@@ -17,8 +18,10 @@
   <artifactId>arquillian-container-glassfish-jakarta</artifactId>
   <version>7.0.13-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>Arquillian Container GlassFish Parent 7.x</name>
-  <description>GlassFish 7.x and Later Container integrations for the Arquillian Project</description>
+  <name>GlassFish Integration for Arquillian</name>
+  <description>A personal fork of GlassFish integrations for the Arquillian Project,
+    see: https://github.com/arquillian/arquillian-container-glassfish6
+  </description>
 
   <scm>
     <connection>scm:git:git://git@github.com:hantsy/arquillian-container-glassfish-jakarta.git</connection>
@@ -26,6 +29,18 @@
     <url>git://github.com/hantsy/arquillian-container-glassfish-jakarta.git</url>
     <tag>HEAD</tag>
   </scm>
+  <developers>
+    <developer>
+      <name>Hantsy Bai</name>
+      <email>hantsy@gmail.com</email>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
 
   <!-- Properties -->
   <properties>
@@ -35,6 +50,8 @@
 
     <!-- Arquillian -->
     <arquillian.version>1.9.1.Final</arquillian.version>
+    <arquillian-jakarta-bom.version>10.0.0.Final</arquillian-jakarta-bom.version>
+    <shrinkwrap-resolver-bom.version>3.3.0</shrinkwrap-resolver-bom.version>
     <junit-jupiter.version>5.10.3</junit-jupiter.version>
 
     <!-- Glassfish -->
@@ -46,7 +63,7 @@
   </properties>
 
   <dependencyManagement>
-    <dependencies>  
+    <dependencies>
       <dependency>
         <groupId>jakarta.platform</groupId>
         <artifactId>jakarta.jakartaee-bom</artifactId>
@@ -73,6 +90,20 @@
         <scope>import</scope>
       </dependency>
       <dependency>
+        <groupId>org.jboss.arquillian.jakarta</groupId>
+        <artifactId>arquillian-jakarta-bom</artifactId>
+        <version>${arquillian-jakarta-bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.shrinkwrap.resolver</groupId>
+        <artifactId>shrinkwrap-resolver-bom</artifactId>
+        <version>${shrinkwrap-resolver-bom.version}</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <dependency>
         <groupId>org.jboss.arquillian</groupId>
         <artifactId>arquillian-build</artifactId>
         <version>${arquillian.version}</version>
@@ -90,15 +121,69 @@
   </dependencyManagement>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>3.1.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.13.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.6.3</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>3.3.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.jreleaser</groupId>
+          <artifactId>jreleaser-maven-plugin</artifactId>
+          <version>1.13.1</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>3.1.1</version>
+        <groupId>org.jreleaser</groupId>
+        <artifactId>jreleaser-maven-plugin</artifactId>
         <configuration>
-          <autoVersionSubmodules>true</autoVersionSubmodules>
-          <pushChanges>false</pushChanges>
-          <localCheckout>true</localCheckout>
+          <jreleaser>
+            <signing>
+              <active>ALWAYS</active>
+              <armored>true</armored>
+            </signing>
+            <deploy>
+              <maven>
+                <nexus2>
+                  <maven-central>
+                    <active>ALWAYS</active>
+                    <url>https://s01.oss.sonatype.org/service/local</url>
+                    <snapshotUrl>https://s01.oss.sonatype.org/content/repositories/snapshots/</snapshotUrl>
+                    <closeRepository>true</closeRepository>
+                    <releaseRepository>true</releaseRepository>
+                    <stagingRepositories>target/staging-deploy</stagingRepositories>
+                  </maven-central>
+                </nexus2>
+                <!-- Portal Publisher API
+                <mavenCentral>
+                    <sonatype>
+                        <active>ALWAYS</active>
+                        <url>https://central.sonatype.com/api/v1/publisher</url>
+                        <stagingRepositories>target/staging-deploy</stagingRepositories>
+                    </sonatype>
+                </mavenCentral>
+                -->
+              </maven>
+            </deploy>
+          </jreleaser>
         </configuration>
       </plugin>
     </plugins>
@@ -115,42 +200,47 @@
   </modules>
 
   <profiles>
-    <!--
-    This profile enables consuming artifacts from the https://jakarta.oss.sonatype.org repository.
-    This is needed when building against staged Jakarta artifacts that have not been released
-    to maven central.
-    -->
     <profile>
-      <id>staging</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <repositories>
-        <repository>
-          <id>jakarta-nexus-staging</id>
-          <name>Jakarta Nexus Staging</name>
-          <url>https://jakarta.oss.sonatype.org/content/repositories/staging/</url>
-          <releases>
-            <enabled>true</enabled>
-          </releases>
-          <snapshots>
-            <enabled>false</enabled>
-          </snapshots>
-        </repository>
-      </repositories>
-      <pluginRepositories>
-        <pluginRepository>
-          <id>jakarta-nexus-staging</id>
-          <name>Jakarta Nexus Staging</name>
-          <url>https://jakarta.oss.sonatype.org/content/repositories/staging/</url>
-          <releases>
-            <enabled>true</enabled>
-          </releases>
-          <snapshots>
-            <enabled>false</enabled>
-          </snapshots>
-        </pluginRepository>
-      </pluginRepositories>
+      <id>publication</id>
+      <properties>
+        <altDeploymentRepository>local::file:./target/staging-deploy</altDeploymentRepository>
+      </properties>
+      <build>
+        <defaultGoal>deploy</defaultGoal>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+                <configuration>
+                  <attach>true</attach>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>test-jar-no-fork</goal>
+                  <goal>jar-no-fork</goal>
+                </goals>
+                <configuration>
+                  <attach>true</attach>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 </project>
