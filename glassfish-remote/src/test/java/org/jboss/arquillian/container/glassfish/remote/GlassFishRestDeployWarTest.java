@@ -21,12 +21,12 @@
 package org.jboss.arquillian.container.glassfish.remote;
 
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import jakarta.servlet.annotation.WebServlet;
 import java.io.BufferedReader;
@@ -35,8 +35,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.logging.Logger;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Verifies arquillian tests can run in container mode with this REST based container.
@@ -45,7 +44,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
  * @author <a href="http://community.jboss.org/people/dan.j.allen">Dan Allen</a>
  */
-@RunWith(Arquillian.class)
+@ExtendWith(ArquillianExtension.class)
 public class GlassFishRestDeployWarTest {
     private static final Logger log = Logger.getLogger(GlassFishRestDeployWarTest.class.getName());
 
@@ -67,6 +66,6 @@ public class GlassFishRestDeployWarTest {
         BufferedReader in = new BufferedReader(new InputStreamReader(response.getInputStream()));
         final String result = in.readLine();
 
-        assertThat(result, equalTo("Hello"));
+        assertEquals("Hello", result);
     }
 }
