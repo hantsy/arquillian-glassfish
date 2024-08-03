@@ -2,6 +2,8 @@
 
 > NOTE: This repository is my personal fork of the official https://github.com/arquillian/arquillian-container-glassfish6[arquillian-container-glassfish6].
 
+[![Build](https://github.com/hantsy/arquillian-container-glassfish-jakarta/actions/workflows/build.yml/badge.svg)](https://github.com/hantsy/arquillian-container-glassfish-jakarta/actions/workflows/build.yml)
+
 The upstream project is not so active, so I decide to fork this project and update to use the latest GlassFish 7.0 and Jakarta EE 10.
 
 * Update to Glassfish 7.0 and Jakarta EE 10 APIs.
