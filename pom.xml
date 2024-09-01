@@ -52,7 +52,7 @@
     <arquillian.version>1.9.1.Final</arquillian.version>
     <arquillian-jakarta-bom.version>10.0.0.Final</arquillian-jakarta-bom.version>
     <shrinkwrap-resolver-bom.version>3.3.0</shrinkwrap-resolver-bom.version>
-    <junit-jupiter.version>5.10.3</junit-jupiter.version>
+    <junit-jupiter.version>5.11.0</junit-jupiter.version>
 
     <!-- Glassfish -->
     <glassfish.version>7.0.12</glassfish.version>
