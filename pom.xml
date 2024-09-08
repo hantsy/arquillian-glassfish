@@ -14,8 +14,8 @@
   <modelVersion>4.0.0</modelVersion>
 
   <!-- Artifact Configuration -->
-  <groupId>org.jboss.arquillian.container</groupId>
-  <artifactId>arquillian-container-glassfish-jakarta</artifactId>
+  <groupId>io.github.hantsy.arquillian</groupId>
+  <artifactId>arquillian-glassfish-parent</artifactId>
   <version>7.0.13-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>GlassFish Integration for Arquillian</name>
@@ -157,49 +157,22 @@
           <artifactId>maven-source-plugin</artifactId>
           <version>${maven-source-plugin.version}</version>
         </plugin>
-        <plugin>
-          <groupId>org.jreleaser</groupId>
-          <artifactId>jreleaser-maven-plugin</artifactId>
-          <version>${jreleaser-maven-plugin.version}</version>
-        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
       <plugin>
-        <groupId>org.jreleaser</groupId>
-        <artifactId>jreleaser-maven-plugin</artifactId>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <version>0.5.0</version>
+        <extensions>true</extensions>
         <configuration>
-          <jreleaser>
-            <signing>
-              <active>ALWAYS</active>
-              <armored>true</armored>
-            </signing>
-            <deploy>
-              <maven>
-                <nexus2>
-                  <maven-central>
-                    <active>ALWAYS</active>
-                    <url>https://s01.oss.sonatype.org/service/local</url>
-                    <snapshotUrl>https://s01.oss.sonatype.org/content/repositories/snapshots/</snapshotUrl>
-                    <closeRepository>true</closeRepository>
-                    <releaseRepository>true</releaseRepository>
-                    <stagingRepositories>target/staging-deploy</stagingRepositories>
-                  </maven-central>
-                </nexus2>
-                <!-- Portal Publisher API
-                <mavenCentral>
-                    <sonatype>
-                        <active>ALWAYS</active>
-                        <url>https://central.sonatype.com/api/v1/publisher</url>
-                        <stagingRepositories>target/staging-deploy</stagingRepositories>
-                    </sonatype>
-                </mavenCentral>
-                -->
-              </maven>
-            </deploy>
-          </jreleaser>
+          <publishingServerId>central</publishingServerId>
+          <skipPublishing>true</skipPublishing>
+<!--          <autoPublish>true</autoPublish>-->
+<!--          <waitUntil>published</waitUntil>-->
         </configuration>
       </plugin>
+
     </plugins>
   </build>
 

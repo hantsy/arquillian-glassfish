@@ -2,15 +2,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <parent>
-    <groupId>org.jboss.arquillian.container</groupId>
-    <artifactId>arquillian-container-glassfish-jakarta</artifactId>
+    <groupId>io.github.hantsy.arquillian</groupId>
+    <artifactId>arquillian-glassfish-parent</artifactId>
     <version>7.0.13-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>arquillian-glassfish-remote-jakarta</artifactId>
+  <artifactId>arquillian-glassfish-remote</artifactId>
   <name>Arquillian Container GlassFish Remote 7.x</name>
   <description>GlassFish 7.x Remote Container integration for the Arquillian Project</description>
 
@@ -25,8 +25,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.arquillian.container</groupId>
-      <artifactId>arquillian-glassfish-common-jakarta</artifactId>
+      <groupId>io.github.hantsy.arquillian</groupId>
+      <artifactId>arquillian-glassfish-common</artifactId>
       <version>${project.version}</version>
     </dependency>
 

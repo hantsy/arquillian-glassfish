@@ -3,13 +3,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.jboss.arquillian.container</groupId>
-    <artifactId>arquillian-container-glassfish-jakarta</artifactId>
+    <groupId>io.github.hantsy.arquillian</groupId>
+    <artifactId>arquillian-glassfish-parent</artifactId>
     <version>7.0.13-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>arquillian-glassfish-managed-jakarta</artifactId>
+  <artifactId>arquillian-glassfish-managed</artifactId>
   <name>Arquillian Container GlassFish Managed 7.x</name>
   <description>GlassFish 7 Managed Container integration for the Arquillian Project</description>
 
@@ -24,8 +24,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.arquillian.container</groupId>
-      <artifactId>arquillian-glassfish-common-jakarta</artifactId>
+      <groupId>io.github.hantsy.arquillian</groupId>
+      <artifactId>arquillian-glassfish-common</artifactId>
       <version>${project.version}</version>
     </dependency>
 
