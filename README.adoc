@@ -2,11 +2,11 @@
 
 > NOTE: This repository is my fork of the official https://github.com/arquillian/arquillian-container-glassfish6[arquillian-container-glassfish6].
 
-*WARNING: Please use https://github.com/OmniFish-EE/arquillian-container-glassfish[OmniFish EE Arquillian Glassfish] as the replacement if you encountered some weird issues.*
+*WARNING: Please use https://github.com/OmniFish-EE/arquillian-container-glassfish[OmniFish EE Arquillian Glassfish] as the replacement if you encountered some issues.*
 
 image::https://github.com/hantsy/arquillian-container-glassfish-jakarta/actions/workflows/build.yml/badge.svg[Build Status,link=https://github.com/hantsy/arquillian-container-glassfish-jakarta/actions/workflows/build.yml]
 
-The upstream project is not so active, so I decide to fork this project and update to use the latest GlassFish 7.0 and Jakarta EE 10.
+The upstream project is inactive, so I decided to fork it and update it to the latest GlassFish 7.0 and Jakarta EE 10.
 
 * Update to Glassfish 7.0 and Jakarta EE 10 APIs.
 * Rename project artifactIds and add a `-jakarta` postfix.
@@ -17,7 +17,7 @@ The upstream project is not so active, so I decide to fork this project and upda
 
 *This project is not published to the Maven Central repository*. I choose https://jitpack.io[JitPack] to share my work to Java communities.
 
-Add the following repository in your project pom.xml.
+Add the following repository to your project pom.xml.
 
 ```xml
 <repositories>
@@ -29,7 +29,7 @@ Add the following repository in your project pom.xml.
 </repositories>
 ```
 
-To use *Managed GlassFish Container Adapter*, add the following dependency.
+To use the *Managed GlassFish Container Adapter*, add the following dependency.
 
 ```xml
 <dependencies>
@@ -66,7 +66,7 @@ Configure property `arquillian-glassfish-arquillian.version`, check the latest b
 </properties>    
 ```    
 
-Explore my personal https://github.com/hantsy/jakartaee10-sandbox[Jakarta EE 10 Example Codes] and get to know the Arquillian configuration details.
+Explore my https://github.com/hantsy/jakartaee10-sandbox[Jakarta EE 10 Example Codes] and get to know the Arquillian configuration details.
 
 > NOTE: If you are new to Arquillian, go to https://github.com/hantsy/jakartaee9-starter-boilerplate[Jakarta EE Starter Boilerplate] project to study it yourself.
 
