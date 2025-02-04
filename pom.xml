@@ -69,6 +69,11 @@
     <!-- Jakarta EE API 10.0.0 -->
     <jakartaee-bom.version>10.0.0</jakartaee-bom.version>
   </properties>
+  <modules>
+    <module>glassfish-common</module>
+    <module>glassfish-managed</module>
+    <module>glassfish-remote</module>
+  </modules>
 
   <dependencyManagement>
     <dependencies>
@@ -167,67 +172,34 @@
         <extensions>true</extensions>
         <configuration>
           <publishingServerId>central</publishingServerId>
-          <skipPublishing>true</skipPublishing>
-<!--          <autoPublish>true</autoPublish>-->
-<!--          <waitUntil>published</waitUntil>-->
+          <autoPublish>true</autoPublish>
+          <waitMaxTime>7200</waitMaxTime>
+          <waitPollingInterval>10</waitPollingInterval>
+          <waitUntil>published</waitUntil>
         </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>publish</goal>
+            </goals>
+            <phase>install</phase>
+          </execution>
+        </executions>
       </plugin>
-
     </plugins>
   </build>
 
-  <modules>
-    <module>glassfish-common</module>
-    <module>glassfish-managed</module>
-    <module>glassfish-remote</module>
-    <!--
-    TODO:
-    <module>glassfish-embedded-6</module>
-    -->
-  </modules>
-
-  <profiles>
-    <profile>
-      <id>publication</id>
-      <properties>
-        <altDeploymentRepository>local::file:./target/staging-deploy</altDeploymentRepository>
-      </properties>
-      <build>
-        <defaultGoal>deploy</defaultGoal>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-                <configuration>
-                  <attach>true</attach>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>attach-sources</id>
-                <goals>
-                  <goal>test-jar-no-fork</goal>
-                  <goal>jar-no-fork</goal>
-                </goals>
-                <configuration>
-                  <attach>true</attach>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
+  <repositories>
+    <repository>
+      <name>Central Portal Snapshots</name>
+      <id>central-portal-snapshots</id>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 </project>
