@@ -17,6 +17,36 @@ The upstream project is inactive, so I decided to fork it and update it to the l
 
 __For the versions prior to 7.0.12, please refer <<JitPack.adoc, Configure JITPack Repository>> to setup project__.
 
+Since 7.0.13, the artifacts is published to Maven Central Repository.
+
+To use the *Managed GlassFish Container Adapter*, add the following dependency.
+
+```xml
+<dependencies>
+    // other dependencies
+    <dependency>
+        <groupId>io.github.hantsy.arquillian</groupId>
+        <artifactId>arquillian-glassfish-managed</artifactId>
+        <version>${arquillian-glassfish.version}</version>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+```
+
+Alternatively, to use *Remote GlassFish Container Adapter*, add the following dependency.
+
+```xml
+<dependencies>
+    // other dependencies
+    <dependency>
+        <groupId>io.github.hantsy.arquillian</groupId>
+        <artifactId>arquillian-glassfish-managed</artifactId>
+        <version>${arquillian-glassfish.version}</version>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+```
+
 Explore my https://github.com/hantsy/jakartaee10-sandbox[Jakarta EE 10 Example Codes] and get to know the Arquillian configuration details.
 
 > NOTE: If you are new to Arquillian, go to https://github.com/hantsy/jakartaee9-starter-boilerplate[Jakarta EE Starter Boilerplate] project to study it yourself.
