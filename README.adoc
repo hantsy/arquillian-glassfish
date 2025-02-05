@@ -15,7 +15,7 @@ The upstream project is inactive, so I decided to fork it and update it to the l
 
 == Usage
 
-__For the versions prior to 7.0.12, please refer link:./JitPack.adoc[Configure JITPack Repository] to setup project__.
+__For the versions prior to 7.0.12, please refer link:JITPACK.adoc[Configure JITPack Repository] to setup project__.
 
 Since 7.0.13, the artifacts have been published in the Maven Central Repository.
 
