@@ -19,7 +19,7 @@ __For the versions prior to 7.0.12, please refer link:JITPACK.adoc[Configure JIT
 
 Since 7.0.13, the artifacts have been published in the Maven Central Repository.
 
-To use the *Managed GlassFish Container Adapter*, add the following dependency.
+Add the following dependency to use the *Managed GlassFish Container Adapter*.
 
 ```xml
 <dependencies>
@@ -33,14 +33,14 @@ To use the *Managed GlassFish Container Adapter*, add the following dependency.
 </dependencies>
 ```
 
-Alternatively, to use *Remote GlassFish Container Adapter*, add the following dependency.
+Alternatively, add the following dependency to use *Remote GlassFish Container Adapter*.
 
 ```xml
 <dependencies>
     // other dependencies
     <dependency>
         <groupId>io.github.hantsy.arquillian</groupId>
-        <artifactId>arquillian-glassfish-managed</artifactId>
+        <artifactId>arquillian-glassfish-remote</artifactId>
         <version>${arquillian-glassfish.version}</version>
         <scope>test</scope>
     </dependency>
