@@ -63,7 +63,7 @@
     <junit-bom.version>5.11.4</junit-bom.version>
 
     <!-- Glassfish -->
-    <glassfish.version>7.0.13</glassfish.version>
+    <glassfish.version>7.0.22</glassfish.version>
     <jersey.version>3.1.9</jersey.version>
 
     <!-- Jakarta EE API 10.0.0 -->
