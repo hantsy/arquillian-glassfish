@@ -56,7 +56,7 @@
     <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
 
     <!-- Arquillian & tests -->
-    <arquillian.version>1.9.1.Final</arquillian.version>
+    <arquillian.version>1.10.0.Final</arquillian.version>
     <arquillian-jakarta-bom.version>10.0.0.Final</arquillian-jakarta-bom.version>
     <shrinkwrap-resolver-bom.version>3.3.2</shrinkwrap-resolver-bom.version>
     <junit-bom.version>5.12.2</junit-bom.version>
