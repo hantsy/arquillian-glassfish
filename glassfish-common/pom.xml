@@ -4,7 +4,7 @@
     <artifactId>arquillian-glassfish-parent</artifactId>
     <groupId>io.github.hantsy.arquillian</groupId>
     <version>7.0.13-SNAPSHOT</version>
-    <relativePath>..</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>arquillian-glassfish-common</artifactId>
   <name>Arquillian Container GlassFish Common 7.x</name>
