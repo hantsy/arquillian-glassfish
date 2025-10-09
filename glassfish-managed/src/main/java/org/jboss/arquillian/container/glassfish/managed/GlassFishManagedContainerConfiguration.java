@@ -93,7 +93,13 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
     }
 
     public File getAdminCliJar() {
-        return new File(getGlassFishHome() + "/glassfish/modules/admin-cli.jar");
+        File adminCliJar = new File(getGlassFishHome() + "/glassfish/modules/admin-cli.jar");
+
+        // GF 8.0.0-M13 changes the admin-cli.jar location
+        if(!adminCliJar.exists()){
+            adminCliJar = new File(getGlassFishHome() + "/glassfish/admin-cli.jar");
+        }
+        return adminCliJar;
     }
 
     public boolean isAllowConnectingToRunningServer() {
