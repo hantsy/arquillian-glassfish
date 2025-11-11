@@ -66,6 +66,10 @@ class GlassFishServerControl {
         }
 
         final List<String> args = new ArrayList<String>();
+
+        // add asadmin classname
+        args.add("-asadmin-classname com.sun.enterprise.admin.cli.AdminMain");
+
         if (config.isDebug()) {
             args.add("--debug");
         }
