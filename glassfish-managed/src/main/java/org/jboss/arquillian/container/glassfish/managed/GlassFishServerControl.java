@@ -46,7 +46,9 @@ class GlassFishServerControl {
             +
             "https://issues.apache.org/jira/browse/DERBY-6438";
 
-    private static final List<String> NO_ARGS = new ArrayList<>();
+
+    // see: https://github.com/eclipse-ee4j/glassfish/issues/25729
+    private static final List<String> ASADMIN_CLASSNAME_ARGS = List.of("-asadmin-classname", "com.sun.enterprise.admin.cli.AdminMain");
 
     private static final Logger logger = Logger.getLogger(GlassFishServerControl.class.getName());
 
@@ -65,10 +67,7 @@ class GlassFishServerControl {
             startDerbyDatabase();
         }
 
-        final List<String> args = new ArrayList<String>();
-
-        // add asadmin classname
-        args.add("-asadmin-classname com.sun.enterprise.admin.cli.AdminMain");
+        final List<String> args = new ArrayList<>(ASADMIN_CLASSNAME_ARGS);
 
         if (config.isDebug()) {
             args.add("--debug");
@@ -88,7 +87,7 @@ class GlassFishServerControl {
     }
 
     private void stopContainer() throws LifecycleException {
-        List<String> args = new ArrayList<>();
+        List<String> args = new ArrayList<>(ASADMIN_CLASSNAME_ARGS);
         // Adding this to workaround current stop failures
         args.add("--kill");
         executeAdminDomainCommand("Stopping container", "stop-domain", args, createProcessOutputConsumer());
@@ -99,7 +98,7 @@ class GlassFishServerControl {
             return;
         }
         try {
-            executeAdminCommand("Starting database", "start-database", NO_ARGS, createProcessOutputConsumer());
+            executeAdminCommand("Starting database", "start-database", ASADMIN_CLASSNAME_ARGS, createProcessOutputConsumer());
         } catch (LifecycleException e) {
             logger.warning(DERBY_MISCONFIGURED_HINT);
             throw e;
@@ -108,7 +107,7 @@ class GlassFishServerControl {
 
     private void stopDerbyDatabase() throws LifecycleException {
         if (config.isEnableDerby()) {
-            executeAdminCommand("Stopping database", "stop-database", NO_ARGS, createProcessOutputConsumer());
+            executeAdminCommand("Stopping database", "stop-database", ASADMIN_CLASSNAME_ARGS, createProcessOutputConsumer());
         }
     }
 
