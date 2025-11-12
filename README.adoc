@@ -1,8 +1,6 @@
 = Arquillian GlassFish Container Integration
 
-> NOTE: This repository is my fork of the official https://github.com/arquillian/arquillian-container-glassfish6[arquillian-container-glassfish6].
-
-*WARNING: Please use https://github.com/OmniFish-EE/arquillian-container-glassfish[OmniFish EE Arquillian Glassfish] as the replacement if you encountered some issues.*
+> NOTE: This repository is a personal fork of the official https://github.com/arquillian/arquillian-container-glassfish6[arquillian-container-glassfish6]. If you encountered some issues. Please switch to using https://github.com/OmniFish-EE/arquillian-container-glassfish[OmniFish EE Arquillian Glassfish], which merged the effort from the Payara community.
 
 image::https://github.com/hantsy/arquillian-container-glassfish-jakarta/actions/workflows/build.yml/badge.svg[Build Status,link=https://github.com/hantsy/arquillian-container-glassfish-jakarta/actions/workflows/build.yml]
 
