@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 https://maven.apache.org/xsd/maven-4.1.0.xsd">
 
   <!-- Parent -->
   <parent>
@@ -8,9 +8,10 @@
     <version>48</version>
     <relativePath />
   </parent>
-
+  <!-- mark this project is the root project -->
+<!--  <root>true</root>-->
   <!-- Model Version -->
-  <modelVersion>4.0.0</modelVersion>
+  
 
   <!-- Artifact Configuration -->
   <groupId>io.github.hantsy.arquillian</groupId>
@@ -68,11 +69,12 @@
     <!-- Jakarta EE API 10.0.0 -->
     <jakartaee-bom.version>10.0.0</jakartaee-bom.version>
   </properties>
-  <modules>
-    <module>glassfish-common</module>
-    <module>glassfish-managed</module>
-    <module>glassfish-remote</module>
-  </modules>
+
+  <subprojects>
+    <subproject>glassfish-common</subproject>
+    <subproject>glassfish-managed</subproject>
+    <subproject>glassfish-remote</subproject>
+  </subprojects>
 
   <dependencyManagement>
     <dependencies>
