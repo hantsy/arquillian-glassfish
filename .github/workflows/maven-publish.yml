@@ -17,8 +17,10 @@ jobs:
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      - name: Get Version
+        uses: battila7/get-version-action@v2.2.1   
       - name: Set version
-        run: mvn versions:set -DnewVersion=${{ github.event.release.tag_name }}
+        run: mvn versions:set -DnewVersion=${{ steps.get_version.outputs.version-without-v }}
       - name: Publish package
         run: mvn -P release --batch-mode install -DskipTests
         env:
