@@ -22,6 +22,7 @@ import org.jboss.arquillian.container.spi.ConfigurationException;
 import org.jboss.arquillian.container.spi.client.deployment.Validate;
 
 import java.io.File;
+import java.nio.file.Path;
 
 /**
  * Configuration for Managed GlassFish containers.
@@ -92,14 +93,9 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
         this.debug = debug;
     }
 
-    public File getAdminCliJar() {
-        File adminCliJar = new File(getGlassFishHome() + "/glassfish/modules/admin-cli.jar");
-
-        // GF 8.0.0-M13 changes the admin-cli.jar location
-        if(!adminCliJar.exists()){
-            adminCliJar = new File(getGlassFishHome() + "/glassfish/admin-cli.jar");
-        }
-        return adminCliJar;
+    public File getAdminCli() {
+        String extension = System.getProperty("os.name").toLowerCase().contains("win") ? ".bat" : "";
+        return Path.of(getGlassFishHome()).resolve(Path.of("glassfish", "bin", "asadmin" + extension)).toFile();
     }
 
     public boolean isAllowConnectingToRunningServer() {
@@ -141,7 +137,7 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
         Validate.configurationDirectoryExists(getGlassFishHome() + "/glassfish",
             getGlassFishHome() + " is not a valid GlassFish installation");
 
-        if (!getAdminCliJar().isFile()) {
+        if (!getAdminCli().isFile()) {
             throw new IllegalArgumentException(
                 "Could not locate admin-cli.jar module in GlassFish installation: " + getGlassFishHome());
         }

@@ -24,6 +24,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,7 +49,7 @@ class GlassFishServerControl {
 
 
     // see: https://github.com/eclipse-ee4j/glassfish/issues/25729
-    private static final List<String> ASADMIN_CLASSNAME_ARGS = List.of("-asadmin-classname", "com.sun.enterprise.admin.cli.AdminMain");
+    private static final List<String> NO_ARGS = Collections.emptyList();
 
     private static final Logger logger = Logger.getLogger(GlassFishServerControl.class.getName());
 
@@ -67,7 +68,7 @@ class GlassFishServerControl {
             startDerbyDatabase();
         }
 
-        final List<String> args = new ArrayList<>(ASADMIN_CLASSNAME_ARGS);
+        final List<String> args = new ArrayList<>();
 
         if (config.isDebug()) {
             args.add("--debug");
@@ -87,7 +88,7 @@ class GlassFishServerControl {
     }
 
     private void stopContainer() throws LifecycleException {
-        List<String> args = new ArrayList<>(ASADMIN_CLASSNAME_ARGS);
+        List<String> args = new ArrayList<>();
         // Adding this to workaround current stop failures
         args.add("--kill");
         executeAdminDomainCommand("Stopping container", "stop-domain", args, createProcessOutputConsumer());
@@ -98,7 +99,7 @@ class GlassFishServerControl {
             return;
         }
         try {
-            executeAdminCommand("Starting database", "start-database", ASADMIN_CLASSNAME_ARGS, createProcessOutputConsumer());
+            executeAdminCommand("Starting database", "start-database", Collections.emptyList(), NO_ARGS, createProcessOutputConsumer());
         } catch (LifecycleException e) {
             logger.warning(DERBY_MISCONFIGURED_HINT);
             throw e;
@@ -107,7 +108,7 @@ class GlassFishServerControl {
 
     private void stopDerbyDatabase() throws LifecycleException {
         if (config.isEnableDerby()) {
-            executeAdminCommand("Stopping database", "stop-database", ASADMIN_CLASSNAME_ARGS, createProcessOutputConsumer());
+            executeAdminCommand("Stopping database", "stop-database", Collections.emptyList(),  NO_ARGS, createProcessOutputConsumer());
         }
     }
 
@@ -139,12 +140,12 @@ class GlassFishServerControl {
             args.add(config.getDomain());
         }
 
-        executeAdminCommand(description, adminCmd, args, consumer);
+        executeAdminCommand(description, adminCmd, Collections.emptyList(), args, consumer);
     }
 
-    private void executeAdminCommand(String description, String command, List<String> args,
+    private void executeAdminCommand(String description, String command,  List<String> asadminArgs, List<String> args,
         ProcessOutputConsumer consumer) throws LifecycleException {
-        final List<String> cmd = buildCommand(command, args);
+        final List<String> cmd = buildCommand(command, asadminArgs, args);
 
         if (config.isOutputToConsole()) {
             System.out.println(description + " using command: " + cmd.toString());
@@ -178,18 +179,15 @@ class GlassFishServerControl {
         }
     }
 
-    private List<String> buildCommand(String command, List<String> args) {
-        List<String> cmd = new ArrayList<String>();
-        cmd.add("java");
-
-        cmd.add("-jar");
-        cmd.add(config.getAdminCliJar().getAbsolutePath());
-
-        cmd.add(command);
-        cmd.addAll(args);
+    private List<String> buildCommand(String command, List<String> asadminArgs, List<String> args) {
+        List<String> cmd = new ArrayList<>();
+        cmd.add(config.getAdminCli().getAbsolutePath());
 
         // very concise output data in a format that is optimized for use in scripts instead of for reading by humans
-        cmd.add("-t");
+        cmd.add("--terse");
+        cmd.addAll(asadminArgs);
+        cmd.add(command);
+        cmd.addAll(args);
         return cmd;
     }
 
