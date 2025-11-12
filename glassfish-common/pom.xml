@@ -3,7 +3,7 @@
   <parent>
     <artifactId>arquillian-glassfish-parent</artifactId>
     <groupId>io.github.hantsy.arquillian</groupId>
-    <version>7.0.14-SNAPSHOT</version>
+    <version>7.0.15-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>arquillian-glassfish-common</artifactId>
