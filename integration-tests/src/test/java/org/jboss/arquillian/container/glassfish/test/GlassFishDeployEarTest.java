@@ -14,10 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.arquillian.container.glassfish.managed;
+package org.jboss.arquillian.container.glassfish.test;
 
-import org.jboss.arquillian.container.glassfish.test.GlassFishDeploymentTestTemplate;
-import org.jboss.arquillian.container.glassfish.test.Greeter;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.shrinkwrap.api.Archive;
@@ -35,7 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author <a href="http://community.jboss.org/people/dan.j.allen">Dan Allen</a>
  */
 @ExtendWith(ArquillianExtension.class)
-public class GlassFishManagedDeployEarTest extends GlassFishDeploymentTestTemplate {
+public class GlassFishDeployEarTest extends GlassFishDeploymentTestTemplate {
 
     @Deployment(testable = false)
     public static Archive<?> getTestArchive() {
