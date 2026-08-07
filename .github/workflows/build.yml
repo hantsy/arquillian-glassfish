@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       glassfish:
-        image: omnifish/glassfish:8.0.4
+        image: ghcr.io/eclipse-ee4j/glassfish:8.0.2
         ports:
           - 4848:4848
           - 8080:8080
