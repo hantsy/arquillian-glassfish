@@ -75,7 +75,7 @@
     <subproject>glassfish-common</subproject>
     <subproject>glassfish-managed</subproject>
     <subproject>glassfish-remote</subproject>
-    <subproject>glassfish-tests</subproject>
+    <subproject>integration-tests</subproject>
   </subprojects>
 
   <dependencyManagement>
