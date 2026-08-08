@@ -94,9 +94,9 @@ public class GlassFishRestClient {
 
     /** Undeploy an application via JSON POST. */
     public GlassFishResponse undeployApplication(String name, String target) {
-        String body = "{\"id\":\"" + name + "\",\"target\":\"" + target + "\"}";
+        var request = new UndeployApplicationRequest(name, target);
         return executePostJson("/applications/application/" + name + "/undeploy",
-            JsonBodyPublisher.of(body), GlassFishResponse.class);
+            JsonBodyPublisher.of(request), GlassFishResponse.class);
     }
 
     /** Execute a POST with JSON body. */
