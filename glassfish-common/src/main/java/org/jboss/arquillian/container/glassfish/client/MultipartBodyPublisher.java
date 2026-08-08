@@ -103,6 +103,16 @@ public final class MultipartBodyPublisher implements HttpRequest.BodyPublisher {
         }
 
         /**
+         * Add a text field if the value is non-null.
+         */
+        public Builder addFieldIf(String name, String value, String contentType) {
+            if (value != null) {
+                textParts.add(new TextPart(name, value, contentType));
+            }
+            return this;
+        }
+
+        /**
          * Add a binary file part.
          */
         public Builder addFilePart(String name, String filename, InputStream data) {

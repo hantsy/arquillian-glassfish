@@ -23,6 +23,7 @@ package org.jboss.arquillian.container.glassfish.client;
 import org.jboss.arquillian.container.glassfish.GlassFishContainerConfiguration;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -88,7 +89,17 @@ public class GlassFishRestClient {
     }
 
     /** Deploy an application via multipart POST. */
-    public GlassFishResponse deployApplication(MultipartBodyPublisher form) {
+    public GlassFishResponse deployApplication(DeployApplicationRequest request,
+                                                String archiveName,
+                                                InputStream archiveData) throws IOException {
+        MultipartBodyPublisher form = MultipartBodyPublisher.newBuilder()
+            .addFilePart("id", archiveName, archiveData)
+            .addField("name", request.name(), "text/plain")
+            .addField("target", request.target(), "text/plain")
+            .addFieldIf("libraries", request.libraries(), "text/plain")
+            .addFieldIf("properties", request.properties(), "text/plain")
+            .addFieldIf("type", request.type(), "text/plain")
+            .build();
         return executePost("/applications/application", form, GlassFishResponse.class);
     }
 

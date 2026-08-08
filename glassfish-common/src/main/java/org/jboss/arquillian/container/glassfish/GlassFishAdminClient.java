@@ -20,12 +20,11 @@
  */
 package org.jboss.arquillian.container.glassfish;
 
+import org.jboss.arquillian.container.glassfish.client.DeployApplicationRequest;
 import org.jboss.arquillian.container.glassfish.client.GlassFishResponse;
 import org.jboss.arquillian.container.glassfish.client.GlassFishClientException;
 import org.jboss.arquillian.container.glassfish.client.GlassFishRestClient;
-import org.jboss.arquillian.container.glassfish.client.MultipartBodyPublisher;
 import org.jboss.arquillian.container.glassfish.client.NodeAddress;
-import org.jboss.arquillian.container.glassfish.client.GlassFishResponse;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.spi.client.container.LifecycleException;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
@@ -235,12 +234,15 @@ public class GlassFishAdminClient {
         final ProtocolMetaData protocolMetaData = new ProtocolMetaData();
         try {
             InputStream deployment = archive.as(ZipExporter.class).exportAsInputStream();
-            deploymentName = createDeploymentName(archiveName);
-            MultipartBodyPublisher.Builder builder = MultipartBodyPublisher.newBuilder()
-                .addFilePart("id", archiveName, deployment);
-            addDeployFormFields(deploymentName, builder);
-            final MultipartBodyPublisher form = builder.build();
-            HTTPContext httpContext = doDeploy(deploymentName, form);
+            deploymentName = extractDeploymentName(archiveName);
+            DeployApplicationRequest request = DeployApplicationRequest
+                .builder(deploymentName, configuration.getTarget())
+                .libraries(configuration.getLibraries())
+                .properties(configuration.getProperties())
+                .type(configuration.getType())
+                .build();
+            restClient.deployApplication(request, archiveName, deployment);
+            HTTPContext httpContext = doDeploy(deploymentName);
             protocolMetaData.addContext(httpContext);
         } catch (GlassFishClientException | IOException e) {
             throw new DeploymentException("Could not deploy " + archiveName, e);
@@ -258,7 +260,7 @@ public class GlassFishAdminClient {
         if (archive == null) {
             throw new IllegalArgumentException("archive must not be null");
         }
-        deploymentName = createDeploymentName(archive.getName());
+        deploymentName = extractDeploymentName(archive.getName());
         try {
             doUndeploy(this.deploymentName);
         } catch (GlassFishClientException e) {
@@ -274,10 +276,7 @@ public class GlassFishAdminClient {
      * @param form - a form of MediaType.MULTIPART_FORM_DATA_TYPE
      * @return subComponents - a map of SubComponents of the application
      */
-    private HTTPContext doDeploy(String name, MultipartBodyPublisher form) {
-        // Deploy the application on the GlassFish server
-        restClient.deployApplication(form);
-
+    private HTTPContext doDeploy(String name) {
         // Fetch the list of SubComponents of the application
         GlassFishResponse subComponentsResponse = restClient
             .listSubComponents(name, null);
@@ -297,7 +296,7 @@ public class GlassFishAdminClient {
                 if (WEBMODULE.equals(subComponent.getValue())) {
 
                     @SuppressWarnings("unchecked")
-                    var children = (List<Map<String, Map<String, String>>>) (Object) subComponentsResponse.extraProperties().get("children");
+                    var children = (List<Map<String, Map<String, String>>>) subComponentsResponse.extraProperties().get("children");
                     // Override the application contextRoot by the webmodul's contextRoot
                     contextRoot = resolveWebModuleContextRoot(componentName, children);
                     resolveWebModuleSubComponents(name, componentName, contextRoot, httpContext);
@@ -570,7 +569,7 @@ public class GlassFishAdminClient {
      * @param archiveName - name of the archive
      * @return deployment name
      */
-    private String createDeploymentName(String archiveName) {
+    private String extractDeploymentName(String archiveName) {
         String correctedName = archiveName;
         if (correctedName.startsWith("/")) {
             correctedName = correctedName.substring(1);
@@ -587,20 +586,6 @@ public class GlassFishAdminClient {
      * @param name    - deployment name
      * @param builder - multipart form builder
      */
-    private void addDeployFormFields(String name, MultipartBodyPublisher.Builder builder) {
-        builder.addField("name", name, "text/plain");
-        builder.addField("target", getConfiguration().getTarget(), "text/plain");
-        if (getConfiguration().getLibraries() != null) {
-            builder.addField("libraries", getConfiguration().getLibraries(), "text/plain");
-        }
-        if (getConfiguration().getProperties() != null) {
-            builder.addField("properties", getConfiguration().getProperties(), "text/plain");
-        }
-        if (getConfiguration().getType() != null && "osgi".equals(getConfiguration().getType())) {
-            builder.addField("type", getConfiguration().getType(), "text/plain");
-        }
-    }
-
     /**
      * The GoF Strategy pattern is used to implement specific algorithm by server type (Admin,
      * Standalone or Clustered server)
