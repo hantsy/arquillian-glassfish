@@ -19,7 +19,7 @@
  */
 package org.jboss.arquillian.container.glassfish.remote;
 
-import org.jboss.arquillian.container.glassfish.CommonGlassFishConfiguration;
+import org.jboss.arquillian.container.glassfish.GlassFishContainerConfiguration;
 import org.jboss.arquillian.container.glassfish.GlassFishAdminClient;
 import org.jboss.arquillian.container.spi.client.container.DeployableContainer;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
@@ -37,18 +37,18 @@ import java.util.logging.Logger;
  *
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
  */
-public class GlassFishRestDeployableContainer implements DeployableContainer<CommonGlassFishConfiguration> {
+public class GlassFishRestDeployableContainer implements DeployableContainer<GlassFishContainerConfiguration> {
 
-    private CommonGlassFishConfiguration configuration;
+    private GlassFishContainerConfiguration configuration;
     private GlassFishAdminClient adminClient;
 
     private static final Logger log = Logger.getLogger(GlassFishRestDeployableContainer.class.getName());
 
-    public Class<CommonGlassFishConfiguration> getConfigurationClass() {
-        return CommonGlassFishConfiguration.class;
+    public Class<GlassFishContainerConfiguration> getConfigurationClass() {
+        return GlassFishContainerConfiguration.class;
     }
 
-    public void setup(CommonGlassFishConfiguration configuration) {
+    public void setup(GlassFishContainerConfiguration configuration) {
         if (configuration == null) {
             throw new IllegalArgumentException("configuration must not be null");
         }

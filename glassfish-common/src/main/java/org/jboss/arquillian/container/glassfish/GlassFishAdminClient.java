@@ -70,7 +70,7 @@ public class GlassFishAdminClient {
 
     private final String DASUrl;
 
-    private final CommonGlassFishConfiguration configuration;
+    private final GlassFishContainerConfiguration configuration;
 
     private ServerStartegy serverInstance = null;
 
@@ -86,7 +86,7 @@ public class GlassFishAdminClient {
     private static final Logger log = Logger.getLogger(GlassFishAdminClient.class.getName());
 
     // GlassFish admin client constructor
-    public GlassFishAdminClient(CommonGlassFishConfiguration configuration) {
+    public GlassFishAdminClient(GlassFishContainerConfiguration configuration) {
         this.configuration = configuration;
         this.target = configuration.getTarget();
 
@@ -731,7 +731,7 @@ public class GlassFishAdminClient {
         return portValue;
     }
 
-    private CommonGlassFishConfiguration getConfiguration() {
+    private GlassFishContainerConfiguration getConfiguration() {
         return configuration;
     }
 

@@ -22,7 +22,7 @@ package org.jboss.arquillian.container.glassfish.client;
 
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
-import org.jboss.arquillian.container.glassfish.CommonGlassFishConfiguration;
+import org.jboss.arquillian.container.glassfish.GlassFishContainerConfiguration;
 
 import java.io.IOException;
 import java.net.URI;
@@ -53,13 +53,13 @@ public class GlassFishRestClient {
     private static final String USER_AGENT_HEADER = "User-Agent";
     public static final String USER_AGENT_VALUE = "arquillian-glassfish-managed-jakarta";
 
-    private final CommonGlassFishConfiguration configuration;
+    private final GlassFishContainerConfiguration configuration;
     private final String adminBaseUrl;
     private final HttpClient httpClient;
 
     private static final Logger log = Logger.getLogger(GlassFishRestClient.class.getName());
 
-    public GlassFishRestClient(CommonGlassFishConfiguration configuration, String adminBaseUrl) {
+    public GlassFishRestClient(GlassFishContainerConfiguration configuration, String adminBaseUrl) {
         this.configuration = configuration;
         this.adminBaseUrl = adminBaseUrl;
         HttpClient.Builder builder = HttpClient.newBuilder()
@@ -71,7 +71,7 @@ public class GlassFishRestClient {
         this.httpClient = builder.build();
     }
 
-    public CommonGlassFishConfiguration getConfiguration() {
+    public GlassFishContainerConfiguration getConfiguration() {
         return configuration;
     }
 

@@ -27,7 +27,7 @@ import org.jboss.arquillian.container.spi.client.container.ContainerConfiguratio
  *
  * @author Vineet Reynolds
  */
-public class CommonGlassFishConfiguration implements ContainerConfiguration {
+public class GlassFishContainerConfiguration implements ContainerConfiguration {
 
     protected String adminHost = "localhost";
 
@@ -55,7 +55,7 @@ public class CommonGlassFishConfiguration implements ContainerConfiguration {
 
     private int retries = 5;
 
-    public CommonGlassFishConfiguration() {
+    public GlassFishContainerConfiguration() {
         super();
     }
 
