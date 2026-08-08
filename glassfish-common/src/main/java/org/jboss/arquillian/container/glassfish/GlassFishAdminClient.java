@@ -61,7 +61,6 @@ public class GlassFishAdminClient {
     private static final String WEBMODULE = "WebModule";
     private static final String SERVLET = "Servlet";
     private static final String RUNNING_STATUS = "RUNNING";
-    private static final String DELETE_OPERATION = "__deleteoperation";
 
     private final String target;
 
@@ -261,12 +260,8 @@ public class GlassFishAdminClient {
         }
         deploymentName = createDeploymentName(archive.getName());
         try {
-            final MultipartBodyPublisher form = MultipartBodyPublisher.newBuilder()
-                .addField("target", getConfiguration().getTarget(), "text/plain")
-                .addField("operation", DELETE_OPERATION, "text/plain")
-                .build();
-            doUndeploy(this.deploymentName, form);
-        } catch (GlassFishClientException | IOException e) {
+            doUndeploy(this.deploymentName);
+        } catch (GlassFishClientException e) {
             throw new DeploymentException("Could not undeploy " + archive.getName(), e);
         }
     }
@@ -321,8 +316,8 @@ public class GlassFishAdminClient {
      * @param name - application name form 	- form that include the target & operation fields
      * @return resultMap
      */
-    private void doUndeploy(String name, MultipartBodyPublisher form) {
-        restClient.undeployApplication(name, form);
+    private void doUndeploy(String name) {
+        restClient.undeployApplication(name);
     }
 
     /**

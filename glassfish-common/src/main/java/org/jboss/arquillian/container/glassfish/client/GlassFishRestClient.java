@@ -92,9 +92,22 @@ public class GlassFishRestClient {
         return executePost("/applications/application", form, GlassFishResponse.class);
     }
 
-    /** Undeploy an application via multipart POST. */
-    public GlassFishResponse undeployApplication(String name, MultipartBodyPublisher form) {
-        return executePost("/applications/application/" + name, form, GlassFishResponse.class);
+    /** Undeploy an application via DELETE. */
+    public GlassFishResponse undeployApplication(String name) {
+        return executeDelete("/applications/application/" + name, GlassFishResponse.class);
+    }
+
+    /** Execute a DELETE and parse the JSON response. */
+    public <T> T executeDelete(String path, Class<T> type) {
+        try {
+            HttpRequest request = newGetBuilder()
+                .uri(URI.create(adminBaseUrl + path))
+                .DELETE()
+                .build();
+            return send(request, type);
+        } catch (IOException | InterruptedException e) {
+            throw new GlassFishClientException(e);
+        }
     }
 
     /** List sub-components of a deployed application. */
