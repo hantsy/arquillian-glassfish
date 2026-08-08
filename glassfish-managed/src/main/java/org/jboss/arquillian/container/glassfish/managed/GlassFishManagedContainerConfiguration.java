@@ -21,8 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-import org.jboss.arquillian.container.glassfish.CommonGlassFishConfiguration;
-import org.jboss.arquillian.container.glassfish.clientutils.GlassFishClient;
+import org.jboss.arquillian.container.glassfish.GlassFishContainerConfiguration;
 import org.jboss.arquillian.container.spi.ConfigurationException;
 
 /**
@@ -32,7 +31,7 @@ import org.jboss.arquillian.container.spi.ConfigurationException;
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
  * @author Vineet Reynolds
  */
-public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfiguration {
+public class GlassFishManagedContainerConfiguration extends GlassFishContainerConfiguration {
 
     private String glassFishHome = System.getenv("GLASSFISH_HOME");
 
@@ -125,7 +124,7 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
 
     @Override
     public String getTarget() {
-        return GlassFishClient.ADMINSERVER;
+        return "server";
     }
 
     /**

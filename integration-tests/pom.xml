@@ -51,6 +51,13 @@
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- jakarta.inject (was transitively pulled via jersey-hk2, now explicit) -->
+    <dependency>
+      <groupId>jakarta.inject</groupId>
+      <artifactId>jakarta.inject-api</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
