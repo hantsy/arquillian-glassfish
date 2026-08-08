@@ -456,7 +456,7 @@ public class GlassFishAdminClient {
 
     protected int getServerInstanceHttpPort(String server, int default_port, boolean secure) {
         String propertyName = (!secure) ? "HTTP_LISTENER_PORT" : "HTTP_SSL_LISTENER_PORT";
-        Map<String, String> listener = restClient.getServerInstanceHttpPort(server, propertyName);
+        Map<String, String> listener = restClient.getServerSystemProperty(server, propertyName);
         return (listener.get("value") != null) ? Integer.parseInt(listener.get("value"))
             : default_port;
     }
