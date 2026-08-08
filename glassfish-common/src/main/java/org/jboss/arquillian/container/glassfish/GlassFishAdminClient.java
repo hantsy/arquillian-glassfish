@@ -64,13 +64,13 @@ public class GlassFishAdminClient {
     private static final String RUNNING_STATUS = "RUNNING";
     private static final String DELETE_OPERATION = "__deleteoperation";
 
-    private String target;
+    private final String target;
 
-    private String adminBaseUrl;
+    private final String adminBaseUrl;
 
-    private String DASUrl;
+    private final String DASUrl;
 
-    CommonGlassFishConfiguration configuration;
+    private final CommonGlassFishConfiguration configuration;
 
     private ServerStartegy serverInstance = null;
 
@@ -737,10 +737,6 @@ public class GlassFishAdminClient {
 
     private String getTarget() {
         return target;
-    }
-
-    private void setTarget(String target) {
-        this.target = target;
     }
 
     /**
