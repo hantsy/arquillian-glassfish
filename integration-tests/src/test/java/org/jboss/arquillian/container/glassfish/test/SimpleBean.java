@@ -21,4 +21,7 @@ import jakarta.inject.Singleton;
 @Singleton
 public class SimpleBean {
 
+    public String hello() {
+        return "HelloCDI";
+    }
 }

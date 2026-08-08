@@ -16,9 +16,11 @@
  */
 package org.jboss.arquillian.container.glassfish.test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit5.container.annotation.ArquillianTest;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -27,20 +29,22 @@ import org.junit.jupiter.api.Test;
 import jakarta.inject.Inject;
 
 @ArquillianTest
-public class SimpleCDIBeanJarTest {
+public class SimpleBeanJarTest {
 
     @Inject
     private SimpleBean foo;
 
     @Deployment
     public static JavaArchive deploy() {
-        return ShrinkWrap.create(JavaArchive.class, "foo.jar").addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml")
-            .addClasses(SimpleBean.class, SimpleCDIBeanJarTest.class);
+        return ShrinkWrap.create(JavaArchive.class, "SimpleBeanJarTest.jar")
+            .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml")
+            .addClasses(SimpleBean.class);
     }
 
     @Test
     public void test() {
         assertNotNull(foo);
+        assertEquals("HelloCDI", foo.hello());
     }
 }
 
