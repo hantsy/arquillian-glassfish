@@ -61,14 +61,6 @@ public class JsonBodyHandler<T> implements HttpResponse.BodyHandler<T> {
         throw new GlassFishClientException("HTTP " + statusCode);
     }
 
-    /**
-     * Extract the {@code extraProperties} map from a response map.
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> Map<String, T> extraProperties(Map<String, Object> responseMap) {
-        return (Map<String, T>) responseMap.get("extraProperties");
-    }
-
     // ── subscriber ───────────────────────────────────────────────────
 
     private static class JsonBodySubscriber<T> implements HttpResponse.BodySubscriber<T> {

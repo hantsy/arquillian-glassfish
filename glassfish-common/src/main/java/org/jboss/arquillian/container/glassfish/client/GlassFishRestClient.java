@@ -160,7 +160,7 @@ public class GlassFishRestClient {
     public Map<String, String> getAttributes(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
         Map<String, String> attributes = new HashMap<>();
-        Map<String, Map<String, String>> extraProperties = JsonBodyHandler.extraProperties(responseMap);
+        Map<String, Map<String, String>> extraProperties = extraProperties(responseMap);
         if (extraProperties != null) {
             attributes = extraProperties.get("entity");
         }
@@ -171,7 +171,7 @@ public class GlassFishRestClient {
     public Map<String, String> getChildResources(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
         Map<String, String> childResources = new HashMap<>();
-        Map<String, Object> extraProperties = JsonBodyHandler.extraProperties(responseMap);
+        Map<String, Object> extraProperties = extraProperties(responseMap);
         if (extraProperties != null) {
             childResources = (Map<String, String>) extraProperties.get("childResources");
         }
@@ -182,7 +182,7 @@ public class GlassFishRestClient {
     public List<Map<String, Object>> getInstancesList(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
         List<Map<String, Object>> instancesList = new ArrayList<>();
-        Map<String, Object> extraProperties = JsonBodyHandler.extraProperties(responseMap);
+        Map<String, Object> extraProperties = extraProperties(responseMap);
         if (extraProperties != null) {
             instancesList = (List<Map<String, Object>>) extraProperties.get("instanceList");
         }
@@ -294,6 +294,11 @@ public class GlassFishRestClient {
     }
 
     // ── private methods ──────────────────────────────────────────────────
+
+    @SuppressWarnings("unchecked")
+    private static <T> Map<String, T> extraProperties(Map<String, Object> responseMap) {
+        return (Map<String, T>) responseMap.get("extraProperties");
+    }
 
     private <T> T send(HttpRequest request, Class<T> type) throws IOException, InterruptedException {
         if (configuration.isDebugRequests()) {
