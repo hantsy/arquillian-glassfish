@@ -44,12 +44,11 @@ import java.util.logging.Logger;
 public class GlassFishRestClient {
 
     // ── constants ──────────────────────────────────────────────────────────
-
-    public static final String USER_AGENT_VALUE = "arquillian-glassfish-managed-jakarta";
+    private static final String USER_AGENT_HEADER = "User-Agent";
+    public static final String USER_AGENT_VALUE = "arquillian-glassfish";
 
     private static final String CSRF_HEADER = "X-Requested-By";
     private static final String CSRF_VALUE = "GlassFish REST Client";
-    private static final String USER_AGENT_HEADER = "User-Agent";
 
     private static final Logger log = Logger.getLogger(GlassFishRestClient.class.getName());
 
@@ -102,80 +101,6 @@ public class GlassFishRestClient {
     public GlassFishResponse listSubComponents(String name, Map<String, String> queryParams) {
         return executeGet("/applications/application/" + name + "/list-sub-components",
             queryParams, GlassFishResponse.class);
-    }
-
-    /** Check if the DAS is running. */
-    public boolean isDASRunning() {
-        try {
-            executeGet("", Map.class);
-            return true;
-        } catch (GlassFishClientException e) {
-            return e.getCause() == null
-                || e.getCause().getMessage() == null
-                || !e.getCause().getMessage().contains("ConnectException");
-        }
-    }
-
-    // ── generic typed GET/POST ─────────────────────────────────────────────
-
-    /** Execute a GET and parse the JSON response as the given type. */
-    public <T> T executeGet(String path, Class<T> type) {
-        try {
-            HttpRequest request = newGetBuilder()
-                .uri(URI.create(adminBaseUrl + path))
-                .GET()
-                .build();
-            return send(request, type);
-        } catch (IOException | InterruptedException e) {
-            throw new GlassFishClientException(e);
-        }
-    }
-
-    /** Execute a GET with query parameters. */
-    public <T> T executeGet(String path, Map<String, String> queryParams, Class<T> type) {
-        String fullPath = path;
-        if (queryParams != null && !queryParams.isEmpty()) {
-            fullPath += "?" + buildQueryString(queryParams);
-        }
-        return executeGet(fullPath, type);
-    }
-
-    /** Execute a POST with multipart body and parse the JSON response. */
-    public <T> T executePost(String path, MultipartBodyPublisher form, Class<T> type) {
-        try {
-            HttpRequest request = newPostBuilder()
-                .uri(URI.create(adminBaseUrl + path))
-                .header("Content-Type", form.getContentType())
-                .POST(form)
-                .build();
-            return send(request, type);
-        } catch (IOException | InterruptedException e) {
-            throw new GlassFishClientException(e);
-        }
-    }
-
-    // ── low-level accessors ────────────────────────────────────────────────
-
-    /** Get the attributes (entity map) for a REST resource. */
-    public Map<String, String> getAttributes(String resourceUrl) {
-        Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
-        Map<String, String> attributes = new HashMap<>();
-        Map<String, Map<String, String>> extraProperties = extraProperties(responseMap);
-        if (extraProperties != null) {
-            attributes = extraProperties.get("entity");
-        }
-        return attributes;
-    }
-
-    /** Get the child resources map for a REST resource. */
-    public Map<String, String> getChildResources(String resourceUrl) {
-        Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
-        Map<String, String> childResources = new HashMap<>();
-        Map<String, Object> extraProperties = extraProperties(responseMap);
-        if (extraProperties != null) {
-            childResources = (Map<String, String>) extraProperties.get("childResources");
-        }
-        return childResources;
     }
 
     /** Get the list of all server instances. */
@@ -282,10 +207,86 @@ public class GlassFishRestClient {
             + "/network-config/protocols/protocol/" + protocol);
     }
 
+    /** Check if the DAS is running. */
+    public boolean isDASRunning() {
+        try {
+            executeGet("", Map.class);
+            return true;
+        } catch (GlassFishClientException e) {
+            return e.getCause() == null
+                || e.getCause().getMessage() == null
+                || !e.getCause().getMessage().contains("ConnectException");
+        }
+    }
+
+    // ── generic typed GET/POST ─────────────────────────────────────────────
+
+    /** Execute a GET and parse the JSON response as the given type. */
+    public <T> T executeGet(String path, Class<T> type) {
+        try {
+            HttpRequest request = newGetBuilder()
+                .uri(URI.create(adminBaseUrl + path))
+                .GET()
+                .build();
+            return send(request, type);
+        } catch (IOException | InterruptedException e) {
+            throw new GlassFishClientException(e);
+        }
+    }
+
+    /** Execute a GET with query parameters. */
+    public <T> T executeGet(String path, Map<String, String> queryParams, Class<T> type) {
+        String fullPath = path;
+        if (queryParams != null && !queryParams.isEmpty()) {
+            fullPath += "?" + buildQueryString(queryParams);
+        }
+        return executeGet(fullPath, type);
+    }
+
+    /** Execute a POST with multipart body and parse the JSON response. */
+    public <T> T executePost(String path, MultipartBodyPublisher form, Class<T> type) {
+        try {
+            HttpRequest request = newPostBuilder()
+                .uri(URI.create(adminBaseUrl + path))
+                .header("Content-Type", form.getContentType())
+                .POST(form)
+                .build();
+            return send(request, type);
+        } catch (IOException | InterruptedException e) {
+            throw new GlassFishClientException(e);
+        }
+    }
+
+    // ── low-level accessors ────────────────────────────────────────────────
+
+    /** Get the attributes (entity map) for a REST resource. */
+    public Map<String, String> getAttributes(String resourceUrl) {
+        Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
+        Map<String, String> attributes = new HashMap<>();
+        Map<String, Map<String, String>> extraProperties = extraProperties(responseMap);
+        if (extraProperties != null) {
+            attributes = extraProperties.get("entity");
+        }
+        return attributes;
+    }
+
+    /** Get the child resources map for a REST resource. */
+    public Map<String, String> getChildResources(String resourceUrl) {
+        Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
+        Map<String, String> childResources = new HashMap<>();
+        Map<String, Object> extraProperties = extraProperties(responseMap);
+        if (extraProperties != null) {
+            childResources = (Map<String, String>) extraProperties.get("childResources");
+        }
+        return childResources;
+    }
+
+
+
     // ── private methods ──────────────────────────────────────────────────
 
     @SuppressWarnings("unchecked")
-    private static <T> Map<String, T> extraProperties(Map<String, Object> responseMap) {
+    private <T> Map<String, T> extraProperties(Map<String, Object> responseMap) {
         return (Map<String, T>) responseMap.get("extraProperties");
     }
 
@@ -317,7 +318,7 @@ public class GlassFishRestClient {
             .header(USER_AGENT_HEADER, USER_AGENT_VALUE);
     }
 
-    static String buildQueryString(Map<String, String> queryParams) {
+    private String buildQueryString(Map<String, String> queryParams) {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (var entry : queryParams.entrySet()) {
