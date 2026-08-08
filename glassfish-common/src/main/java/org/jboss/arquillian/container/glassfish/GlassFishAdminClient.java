@@ -39,7 +39,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -447,8 +446,6 @@ public class GlassFishAdminClient {
             attributes.get("configRef"), propertyName);
         return Integer.parseInt(listener.get("value"));
     }
-
-    private static final String SERVER_PROPERTY = "/servers/server/{server}/system-property/{system-property}";
 
     /**
      * Get the port number defined as a system property in a configuration, and overridden at the
