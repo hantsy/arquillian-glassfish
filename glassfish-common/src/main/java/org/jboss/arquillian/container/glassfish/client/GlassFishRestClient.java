@@ -178,6 +178,11 @@ public class GlassFishRestClient {
         return childResources;
     }
 
+    /** Get the list of all server instances. */
+    public List<Map<String, Object>> getInstancesList() {
+        return getInstancesList("/list-instances");
+    }
+
     /** Get the list of server instances from a REST resource. */
     public List<Map<String, Object>> getInstancesList(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
@@ -187,6 +192,13 @@ public class GlassFishRestClient {
             instancesList = (List<Map<String, Object>>) extraProperties.get("instanceList");
         }
         return instancesList;
+    }
+
+    /** Get the list of virtual servers for a configuration. */
+    public List<Map<String, Object>> getVirtualServersList(String configRef) {
+        String path = "/configs/config/" + configRef + "/http-service/list-virtual-servers";
+        return (List<Map<String, Object>>) executeGet(path, GlassFishResponse.class)
+            .extraProperties().get("children");
     }
 
     // ── resource-level accessors ──────────────────────────────────────────

@@ -162,8 +162,6 @@ public class GlassFishAdminClient {
         }
     }
 
-    private static final String GLASSFISH_VERSION = "/version";
-
     private void setGlassFishVersion() {
         GlassFishResponse versionResponse = restClient.getVersion();
         if (versionResponse != null && versionResponse.extraProperties() != null) {
@@ -188,9 +186,6 @@ public class GlassFishAdminClient {
         }
     }
 
-    // the REST resource path template to retrieve the list of server instances
-    private static final String INSTANCE_LIST = "/list-instances";
-
     /**
      * Filtering on the status of the instances -	If the standalone server instance status is
      * RUNNING, returns the nodeAddress, but throws an exception otherwise. -	In case of cluster,
@@ -201,7 +196,7 @@ public class GlassFishAdminClient {
      * @return nodeAddress - if any has RUNNING status
      */
     private NodeAddress runningInstanceFilter(List<NodeAddress> nodeAddressList) {
-        var instanceList = restClient.getInstancesList(INSTANCE_LIST);
+        var instanceList = restClient.getInstancesList();
 
         String instanceStatus = null;
         for (var instance : instanceList) {
@@ -225,10 +220,6 @@ public class GlassFishAdminClient {
         }
         throw new GlassFishClientException(message);
     }
-
-    // the REST resource path template to retrieve the list of server instances
-    private static final String APPLICATION = "/applications/application";
-    private static final String APPLICATION_RESOURCE = "/applications/application/{name}";
 
     /**
      * Deploy a ShrinkWrap {@link Archive} to the target server or cluster of GlassFish.
@@ -470,26 +461,14 @@ public class GlassFishAdminClient {
             : default_port;
     }
 
-    private static final String VIRTUAL_SERVERS =
-        "/configs/config/{config}/http-service/list-virtual-servers";
-
     /**
      * Obtains the list of virtual servers associated with the deployment target. This method omits
      * '__asadmin' in the result, as no deployments can target this virtual server.
-     *
-     * @param attributes The attributes which references the configuration (server or cluster
-     *                   configuration)
-     * @return A list of virtual server names that have been found in the server/cluster
-     * configuration
      */
     private List<String> getVirtualServers(Map<String, String> attributes) {
-        String config = attributes.get("configRef")
+        String configRef = attributes.get("configRef")
             .replace("{target}", attributes.get("name"));
-        String resolvedPath = GlassFishRestClient.resolveTemplates(VIRTUAL_SERVERS,
-            Map.of("config", config));
-        GlassFishResponse virtualServersResponse = restClient
-            .executeGet(resolvedPath, GlassFishResponse.class);
-        List<Map<String, Object>> virtualServers = (List<Map<String, Object>>) virtualServersResponse.extraProperties().get("children");
+        List<Map<String, Object>> virtualServers = restClient.getVirtualServersList(configRef);
         List<String> virtualServerNames = new ArrayList<>();
         for (Map<String, Object> virtualServer : virtualServers) {
             String virtualServerName = (String) virtualServer.get("message");
