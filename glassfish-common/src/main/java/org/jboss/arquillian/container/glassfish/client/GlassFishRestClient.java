@@ -96,9 +96,9 @@ public class GlassFishRestClient {
             .addFilePart("id", archiveName, archiveData)
             .addField("name", request.name(), "text/plain")
             .addField("target", request.target(), "text/plain")
-            .addFieldIf("libraries", request.libraries(), "text/plain")
-            .addFieldIf("properties", request.properties(), "text/plain")
-            .addFieldIf("type", "osgi".equals(request.type()) ? request.type() : null, "text/plain")
+            .addOptionalField("libraries", request.libraries(), "text/plain")
+            .addOptionalField("properties", request.properties(), "text/plain")
+            .addOptionalField("type", "osgi".equals(request.type()) ? request.type() : null, "text/plain")
             .build();
         return executePost("/applications/application", form, GlassFishResponse.class);
     }

@@ -32,7 +32,7 @@ import java.util.concurrent.Flow;
  * <p>
  * Usage:
  * <pre>{@code
- * MultipartBody body = MultipartBody.newBuilder()
+ * MultipartBodyPublisher body = MultipartBodyPublisher.newBuilder()
  *     .addField("name", "myapp", "text/plain")
  *     .addFilePart("id", "app.war", inputStream)
  *     .build();
@@ -80,7 +80,7 @@ public final class MultipartBodyPublisher implements HttpRequest.BodyPublisher {
     }
 
     /**
-     * Mutable builder for assembling a {@link MultipartBody}.
+     * Mutable builder for assembling a {@link MultipartBodyPublisher}.
      */
     public static final class Builder {
 
@@ -105,7 +105,7 @@ public final class MultipartBodyPublisher implements HttpRequest.BodyPublisher {
         /**
          * Add a text field if the value is non-null.
          */
-        public Builder addFieldIf(String name, String value, String contentType) {
+        public Builder addOptionalField(String name, String value, String contentType) {
             if (value != null) {
                 textParts.add(new TextPart(name, value, contentType));
             }
@@ -121,7 +121,7 @@ public final class MultipartBodyPublisher implements HttpRequest.BodyPublisher {
         }
 
         /**
-         * Build the immutable {@link MultipartBody}.
+         * Build the immutable {@link MultipartBodyPublisher}.
          */
         public MultipartBodyPublisher build() throws IOException {
             byte[] all;
