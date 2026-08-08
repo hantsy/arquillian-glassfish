@@ -64,12 +64,13 @@ public class GlassFishManagedDeployableContainer implements DeployableContainer<
                 glassFishManager.start();
                 return;
             } else {
-                throw new LifecycleException("The server is already running! "
-                    + "Managed containers does not support connecting to running server instances due to the "
-                    + "possible harmful effect of connecting to the wrong server. Please stop server before running or "
-                    + "change to another type of container.\n"
-                    + "To disable this check and allow Arquillian to connect to a running server, "
-                    + "set allowConnectingToRunningServer to true in the container configuration");
+                throw new LifecycleException("""
+                    The server is already running! \
+                    Managed containers does not support connecting to running server instances due to the \
+                    possible harmful effect of connecting to the wrong server. Please stop server before running or \
+                    change to another type of container.
+                    To disable this check and allow Arquillian to connect to a running server, \
+                    set allowConnectingToRunningServer to true in the container configuration""");
             }
         } else {
             serverControl.start();
