@@ -317,7 +317,7 @@ public class GlassFishAdminClient {
      * @return resultMap
      */
     private void doUndeploy(String name) {
-        restClient.undeployApplication(name);
+        restClient.undeployApplication(name, configuration.getTarget());
     }
 
     /**
@@ -351,7 +351,7 @@ public class GlassFishAdminClient {
 
     private String getApplicationContextRoot(String name) {
         Map<String, String> applicationAttributes = restClient.getApplicationAttributes(name);
-        return applicationAttributes.get("contextRoot").toString();
+        return applicationAttributes.get("contextRoot");
     }
 
     private String resolveWebModuleContextRoot(String componentName,

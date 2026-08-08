@@ -92,17 +92,20 @@ public class GlassFishRestClient {
         return executePost("/applications/application", form, GlassFishResponse.class);
     }
 
-    /** Undeploy an application via DELETE. */
-    public GlassFishResponse undeployApplication(String name) {
-        return executeDelete("/applications/application/" + name, GlassFishResponse.class);
+    /** Undeploy an application via JSON POST. */
+    public GlassFishResponse undeployApplication(String name, String target) {
+        String body = "{\"id\":\"" + name + "\",\"target\":\"" + target + "\"}";
+        return executePostJson("/applications/application/" + name + "/undeploy",
+            JsonBodyPublisher.of(body), GlassFishResponse.class);
     }
 
-    /** Execute a DELETE and parse the JSON response. */
-    public <T> T executeDelete(String path, Class<T> type) {
+    /** Execute a POST with JSON body. */
+    public <T> T executePostJson(String path, JsonBodyPublisher body, Class<T> type) {
         try {
-            HttpRequest request = newGetBuilder()
+            HttpRequest request = newPostJsonBuilder()
                 .uri(URI.create(adminBaseUrl + path))
-                .DELETE()
+                .header("Content-Type", "application/json")
+                .POST(body)
                 .build();
             return send(request, type);
         } catch (IOException | InterruptedException e) {
@@ -320,6 +323,13 @@ public class GlassFishRestClient {
     }
 
     private HttpRequest.Builder newPostBuilder() {
+        return HttpRequest.newBuilder()
+            .header("Accept", "application/json")
+            .header(CSRF_HEADER, CSRF_VALUE)
+            .header(USER_AGENT_HEADER, USER_AGENT_VALUE);
+    }
+
+    private HttpRequest.Builder newPostJsonBuilder() {
         return HttpRequest.newBuilder()
             .header("Accept", "application/json")
             .header(CSRF_HEADER, CSRF_VALUE)
