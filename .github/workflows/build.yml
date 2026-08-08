@@ -7,10 +7,6 @@ on:
       - "pom.xml"
     branches:
       - master
-      - 'refactor/**'
-      - 'fix/**'
-      - 'feature/**'
-      - 'chore/**'
   pull_request:
     types:
       - opened
