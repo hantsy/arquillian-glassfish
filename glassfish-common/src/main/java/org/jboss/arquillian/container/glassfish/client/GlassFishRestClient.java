@@ -40,24 +40,30 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Low-level HTTP client for the GlassFish admin REST API.
- * Uses {@link java.net.http.HttpClient} and Jakarta JSONB for JSON parsing.
+ * REST client for the GlassFish admin API using {@link java.net.http.HttpClient}
+ * and Jakarta JSONB for JSON response parsing.
  */
 public class GlassFishRestClient {
 
+    // ── constants ──────────────────────────────────────────────────────────
+
     public static final String SUCCESS = "SUCCESS";
     public static final String WARNING = "WARNING";
+    public static final String USER_AGENT_VALUE = "arquillian-glassfish-managed-jakarta";
 
     private static final String CSRF_HEADER = "X-Requested-By";
     private static final String CSRF_VALUE = "GlassFish REST Client";
     private static final String USER_AGENT_HEADER = "User-Agent";
-    public static final String USER_AGENT_VALUE = "arquillian-glassfish-managed-jakarta";
+
+    private static final Logger log = Logger.getLogger(GlassFishRestClient.class.getName());
+
+    // ── fields ─────────────────────────────────────────────────────────────
 
     private final GlassFishContainerConfiguration configuration;
     private final String adminBaseUrl;
     private final HttpClient httpClient;
 
-    private static final Logger log = Logger.getLogger(GlassFishRestClient.class.getName());
+    // ── constructor ────────────────────────────────────────────────────────
 
     public GlassFishRestClient(GlassFishContainerConfiguration configuration, String adminBaseUrl) {
         this.configuration = configuration;
@@ -75,49 +81,34 @@ public class GlassFishRestClient {
         return configuration;
     }
 
-    public HttpClient getHttpClient() {
-        return httpClient;
-    }
-
     public String getAdminBaseUrl() {
         return adminBaseUrl;
     }
 
-    // ── typed operations ────────────────────────────────────────────────
+    // ── high-level operations ──────────────────────────────────────────────
 
-    /**
-     * Get GlassFish server version information.
-     */
+    /** Get GlassFish server version information. */
     public GlassFishResponse getVersion() {
         return executeGet("/version", GlassFishResponse.class);
     }
 
-    /**
-     * Deploy an application via multipart POST.
-     */
+    /** Deploy an application via multipart POST. */
     public GlassFishResponse deployApplication(MultipartBodyPublisher form) {
         return executePost("/applications/application", form, GlassFishResponse.class);
     }
 
-    /**
-     * Undeploy an application via multipart POST.
-     */
+    /** Undeploy an application via multipart POST. */
     public GlassFishResponse undeployApplication(String name, MultipartBodyPublisher form) {
-        String path = "/applications/application/" + name;
-        return executePost(path, form, GlassFishResponse.class);
+        return executePost("/applications/application/" + name, form, GlassFishResponse.class);
     }
 
-    /**
-     * List sub-components of a deployed application.
-     */
+    /** List sub-components of a deployed application. */
     public GlassFishResponse listSubComponents(String name, Map<String, String> queryParams) {
         return executeGet("/applications/application/" + name + "/list-sub-components",
             queryParams, GlassFishResponse.class);
     }
 
-    /**
-     * Check if the DAS is running.
-     */
+    /** Check if the DAS is running. */
     public boolean isDASRunning() {
         try {
             executeGet("", Map.class);
@@ -129,27 +120,22 @@ public class GlassFishRestClient {
         }
     }
 
-    // ── generic typed GET/POST ───────────────────────────────────────────
+    // ── generic typed GET/POST ─────────────────────────────────────────────
 
-    /**
-     * Execute a GET and parse the JSON response as the given type.
-     */
+    /** Execute a GET and parse the JSON response as the given type. */
     public <T> T executeGet(String path, Class<T> type) {
         try {
             HttpRequest request = newGetBuilder()
                 .uri(URI.create(adminBaseUrl + path))
                 .GET()
                 .build();
-            HttpResponse<String> response = sendRequest(request);
-            return parseResponse(response, type);
+            return parseResponse(sendRequest(request), type);
         } catch (IOException | InterruptedException e) {
             throw new GlassFishClientException(e);
         }
     }
 
-    /**
-     * Execute a GET with query parameters and parse the JSON response as the given type.
-     */
+    /** Execute a GET with query parameters. */
     public <T> T executeGet(String path, Map<String, String> queryParams, Class<T> type) {
         String fullPath = path;
         if (queryParams != null && !queryParams.isEmpty()) {
@@ -158,9 +144,7 @@ public class GlassFishRestClient {
         return executeGet(fullPath, type);
     }
 
-    /**
-     * Execute a POST with multipart body and parse the JSON response as the given type.
-     */
+    /** Execute a POST with multipart body and parse the JSON response. */
     public <T> T executePost(String path, MultipartBodyPublisher form, Class<T> type) {
         try {
             HttpRequest request = newPostBuilder()
@@ -168,56 +152,15 @@ public class GlassFishRestClient {
                 .header("Content-Type", form.getContentType())
                 .POST(form)
                 .build();
-            HttpResponse<String> response = sendRequest(request);
-            return parseResponse(response, type);
+            return parseResponse(sendRequest(request), type);
         } catch (IOException | InterruptedException e) {
             throw new GlassFishClientException(e);
         }
     }
 
-    /**
-     * Parse HTTP response, validating status and exit_code for deployment-style responses.
-     */
-    private <T> T parseResponse(HttpResponse<String> response, Class<T> type) throws GlassFishClientException {
-        int statusCode = response.statusCode();
-        String body = response.body();
-        String message = "";
+    // ── low-level accessors ────────────────────────────────────────────────
 
-        T result = null;
-        if (body != null && !body.isEmpty()) {
-            result = jsonbFromBody(body, type);
-        }
-
-        if (statusCode >= 200 && statusCode < 300) {
-            if (result instanceof Map<?, ?> m) {
-                Object exitCode = m.get("exit_code");
-                if (exitCode == null) {
-                    throw new GlassFishClientException(message);
-                } else if (WARNING.equals(exitCode)) {
-                    message = "exit_code: " + exitCode + ", message: " + m.get("message");
-                    log.warning("Deployment resulted in a warning: " + message);
-                } else if (!SUCCESS.equals(exitCode)) {
-                    message = "exit_code: " + exitCode + ", message: " + m.get("message");
-                    throw new GlassFishClientException(message);
-                }
-            }
-        } else if (statusCode == 404) {
-            message = " [status: " + statusCode + "]";
-            log.warning(message);
-        } else {
-            message = " [status: " + statusCode + "]";
-            log.severe(message);
-            throw new GlassFishClientException(message);
-        }
-
-        return result;
-    }
-
-    // ── convenience accessors (return typed maps) ────────────────────────
-
-    /**
-     * Get the attributes (entity map) for a REST resource.
-     */
+    /** Get the attributes (entity map) for a REST resource. */
     public Map<String, String> getAttributes(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
         Map<String, String> attributes = new HashMap<>();
@@ -228,9 +171,7 @@ public class GlassFishRestClient {
         return attributes;
     }
 
-    /**
-     * Get the child resources map for a REST resource.
-     */
+    /** Get the child resources map for a REST resource. */
     public Map<String, String> getChildResources(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
         Map<String, String> childResources = new HashMap<>();
@@ -241,9 +182,7 @@ public class GlassFishRestClient {
         return childResources;
     }
 
-    /**
-     * Get the list of server instances from a REST resource.
-     */
+    /** Get the list of server instances from a REST resource. */
     public List<Map<String, Object>> getInstancesList(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
         List<Map<String, Object>> instancesList = new ArrayList<>();
@@ -347,9 +286,7 @@ public class GlassFishRestClient {
 
     // ── JSONB parsing ────────────────────────────────────────────────────
 
-    /**
-     * Parse a JSON string to a typed object using Jakarta JSONB.
-     */
+    /** Parse a JSON string to a typed object using Jakarta JSONB. */
     public <T> T jsonbFromBody(String body, Class<T> type) {
         try (Jsonb jsonb = JsonbBuilder.create()) {
             return jsonb.fromJson(body, type);
@@ -358,25 +295,59 @@ public class GlassFishRestClient {
         }
     }
 
-    // ── internal helpers ─────────────────────────────────────────────────
+    // ── static utilities ─────────────────────────────────────────────────
+
+    /** Resolve {@code {var}} placeholders in a URI path template. */
+    public static String resolveTemplates(String pathTemplate, Map<String, String> templateVars) {
+        String result = pathTemplate;
+        if (templateVars != null) {
+            for (var entry : templateVars.entrySet()) {
+                result = result.replace("{" + entry.getKey() + "}", entry.getValue());
+            }
+        }
+        return result;
+    }
+
+    // ── private methods ──────────────────────────────────────────────────
+
+    private <T> T parseResponse(HttpResponse<String> response, Class<T> type) {
+        int statusCode = response.statusCode();
+        String body = response.body();
+        String message = "";
+
+        T result = null;
+        if (body != null && !body.isEmpty()) {
+            result = jsonbFromBody(body, type);
+        }
+
+        if (statusCode >= 200 && statusCode < 300) {
+            if (result instanceof Map<?, ?> m) {
+                Object exitCode = m.get("exit_code");
+                if (exitCode == null) {
+                    throw new GlassFishClientException(message);
+                } else if (WARNING.equals(exitCode)) {
+                    message = "exit_code: " + exitCode + ", message: " + m.get("message");
+                    log.warning("Deployment resulted in a warning: " + message);
+                } else if (!SUCCESS.equals(exitCode)) {
+                    message = "exit_code: " + exitCode + ", message: " + m.get("message");
+                    throw new GlassFishClientException(message);
+                }
+            }
+        } else if (statusCode == 404) {
+            message = " [status: " + statusCode + "]";
+            log.warning(message);
+        } else {
+            message = " [status: " + statusCode + "]";
+            log.severe(message);
+            throw new GlassFishClientException(message);
+        }
+
+        return result;
+    }
 
     @SuppressWarnings("unchecked")
     private static <T> Map<String, T> extractExtraProperties(Map<String, Object> responseMap) {
         return (Map<String, T>) responseMap.get("extraProperties");
-    }
-
-    private HttpRequest.Builder newGetBuilder() {
-        return HttpRequest.newBuilder()
-            .header("Accept", "application/json")
-            .header(CSRF_HEADER, CSRF_VALUE)
-            .header(USER_AGENT_HEADER, USER_AGENT_VALUE);
-    }
-
-    private HttpRequest.Builder newPostBuilder() {
-        return HttpRequest.newBuilder()
-            .header("Accept", "application/json")
-            .header(CSRF_HEADER, CSRF_VALUE)
-            .header(USER_AGENT_HEADER, USER_AGENT_VALUE);
     }
 
     private HttpResponse<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
@@ -393,14 +364,18 @@ public class GlassFishRestClient {
         return response;
     }
 
-    public static String resolveTemplates(String pathTemplate, Map<String, String> templateVars) {
-        String result = pathTemplate;
-        if (templateVars != null) {
-            for (var entry : templateVars.entrySet()) {
-                result = result.replace("{" + entry.getKey() + "}", entry.getValue());
-            }
-        }
-        return result;
+    private HttpRequest.Builder newGetBuilder() {
+        return HttpRequest.newBuilder()
+            .header("Accept", "application/json")
+            .header(CSRF_HEADER, CSRF_VALUE)
+            .header(USER_AGENT_HEADER, USER_AGENT_VALUE);
+    }
+
+    private HttpRequest.Builder newPostBuilder() {
+        return HttpRequest.newBuilder()
+            .header("Accept", "application/json")
+            .header(CSRF_HEADER, CSRF_VALUE)
+            .header(USER_AGENT_HEADER, USER_AGENT_VALUE);
     }
 
     static String buildQueryString(Map<String, String> queryParams) {
@@ -418,8 +393,10 @@ public class GlassFishRestClient {
         return sb.toString();
     }
 
+    // ── inner classes ────────────────────────────────────────────────────
+
     /**
-     * Simple HTTP Basic authenticator for GlassFish admin API.
+     * HTTP Basic authenticator for the GlassFish admin API.
      */
     private static class GlassFishAuthenticator extends java.net.Authenticator {
         private final String user;
