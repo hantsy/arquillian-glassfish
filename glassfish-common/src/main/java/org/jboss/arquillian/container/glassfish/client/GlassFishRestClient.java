@@ -98,7 +98,7 @@ public class GlassFishRestClient {
             .addField("target", request.target(), "text/plain")
             .addFieldIf("libraries", request.libraries(), "text/plain")
             .addFieldIf("properties", request.properties(), "text/plain")
-            .addFieldIf("type", request.type(), "text/plain")
+            .addFieldIf("type", "osgi".equals(request.type()) ? request.type() : null, "text/plain")
             .build();
         return executePost("/applications/application", form, GlassFishResponse.class);
     }
