@@ -16,13 +16,14 @@
  */
 package org.jboss.arquillian.container.glassfish.managed;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Objects;
+
 import org.jboss.arquillian.container.glassfish.CommonGlassFishConfiguration;
 import org.jboss.arquillian.container.glassfish.clientutils.GlassFishClient;
 import org.jboss.arquillian.container.spi.ConfigurationException;
-import org.jboss.arquillian.container.spi.client.deployment.Validate;
-
-import java.io.File;
-import java.nio.file.Path;
 
 /**
  * Configuration for Managed GlassFish containers.
@@ -132,10 +133,12 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
      * properties are set and have correct values
      */
     public void validate() throws ConfigurationException {
-        Validate.notNull(getGlassFishHome(),
+        Objects.requireNonNull(getGlassFishHome(),
             "The property glassFishHome must be specified or the GLASSFISH_HOME environment variable must be set");
-        Validate.configurationDirectoryExists(getGlassFishHome() + "/glassfish",
-            getGlassFishHome() + " is not a valid GlassFish installation");
+        if (!Files.isDirectory(Path.of(getGlassFishHome(), "glassfish"))) {
+            throw new IllegalArgumentException(
+                getGlassFishHome() + " is not a valid GlassFish installation");
+        }
 
         if (!getAdminCli().isFile()) {
             throw new IllegalArgumentException(
@@ -143,8 +146,9 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
         }
 
         if (getDomain() != null) {
-            Validate.configurationDirectoryExists(getGlassFishHome() + "/glassfish/domains/" + getDomain(),
-                "Invalid domain: " + getDomain());
+            if (!Files.isDirectory(Path.of(getGlassFishHome(), "glassfish", "domains", getDomain()))) {
+                throw new IllegalArgumentException("Invalid domain: " + getDomain());
+            }
         }
 
         super.validate();
