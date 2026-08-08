@@ -20,8 +20,6 @@
  */
 package org.jboss.arquillian.container.glassfish.client;
 
-import jakarta.json.bind.Jsonb;
-import jakarta.json.bind.JsonbBuilder;
 import org.jboss.arquillian.container.glassfish.GlassFishContainerConfiguration;
 
 import java.io.IOException;
@@ -47,8 +45,6 @@ public class GlassFishRestClient {
 
     // ── constants ──────────────────────────────────────────────────────────
 
-    public static final String SUCCESS = "SUCCESS";
-    public static final String WARNING = "WARNING";
     public static final String USER_AGENT_VALUE = "arquillian-glassfish-managed-jakarta";
 
     private static final String CSRF_HEADER = "X-Requested-By";
@@ -62,6 +58,7 @@ public class GlassFishRestClient {
     private final GlassFishContainerConfiguration configuration;
     private final String adminBaseUrl;
     private final HttpClient httpClient;
+    private final JsonBodyExtractor bodyExtractor;
 
     // ── constructor ────────────────────────────────────────────────────────
 
@@ -75,6 +72,7 @@ public class GlassFishRestClient {
                 configuration.getAdminUser(), configuration.getAdminPassword()));
         }
         this.httpClient = builder.build();
+        this.bodyExtractor = new JsonBodyExtractor();
     }
 
     public GlassFishContainerConfiguration getConfiguration() {
@@ -164,7 +162,7 @@ public class GlassFishRestClient {
     public Map<String, String> getAttributes(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
         Map<String, String> attributes = new HashMap<>();
-        Map<String, Map<String, String>> extraProperties = extractExtraProperties(responseMap);
+        Map<String, Map<String, String>> extraProperties = JsonBodyExtractor.extraProperties(responseMap);
         if (extraProperties != null) {
             attributes = extraProperties.get("entity");
         }
@@ -175,7 +173,7 @@ public class GlassFishRestClient {
     public Map<String, String> getChildResources(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
         Map<String, String> childResources = new HashMap<>();
-        Map<String, Object> extraProperties = extractExtraProperties(responseMap);
+        Map<String, Object> extraProperties = JsonBodyExtractor.extraProperties(responseMap);
         if (extraProperties != null) {
             childResources = (Map<String, String>) extraProperties.get("childResources");
         }
@@ -186,7 +184,7 @@ public class GlassFishRestClient {
     public List<Map<String, Object>> getInstancesList(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
         List<Map<String, Object>> instancesList = new ArrayList<>();
-        Map<String, Object> extraProperties = extractExtraProperties(responseMap);
+        Map<String, Object> extraProperties = JsonBodyExtractor.extraProperties(responseMap);
         if (extraProperties != null) {
             instancesList = (List<Map<String, Object>>) extraProperties.get("instanceList");
         }
@@ -284,17 +282,6 @@ public class GlassFishRestClient {
             + "/network-config/protocols/protocol/" + protocol);
     }
 
-    // ── JSONB parsing ────────────────────────────────────────────────────
-
-    /** Parse a JSON string to a typed object using Jakarta JSONB. */
-    public <T> T jsonbFromBody(String body, Class<T> type) {
-        try (Jsonb jsonb = JsonbBuilder.create()) {
-            return jsonb.fromJson(body, type);
-        } catch (Exception e) {
-            throw new GlassFishClientException("Failed to parse JSON response: " + body, e);
-        }
-    }
-
     // ── static utilities ─────────────────────────────────────────────────
 
     /** Resolve {@code {var}} placeholders in a URI path template. */
@@ -311,43 +298,7 @@ public class GlassFishRestClient {
     // ── private methods ──────────────────────────────────────────────────
 
     private <T> T parseResponse(HttpResponse<String> response, Class<T> type) {
-        int statusCode = response.statusCode();
-        String body = response.body();
-        String message = "";
-
-        T result = null;
-        if (body != null && !body.isEmpty()) {
-            result = jsonbFromBody(body, type);
-        }
-
-        if (statusCode >= 200 && statusCode < 300) {
-            if (result instanceof Map<?, ?> m) {
-                Object exitCode = m.get("exit_code");
-                if (exitCode == null) {
-                    throw new GlassFishClientException(message);
-                } else if (WARNING.equals(exitCode)) {
-                    message = "exit_code: " + exitCode + ", message: " + m.get("message");
-                    log.warning("Deployment resulted in a warning: " + message);
-                } else if (!SUCCESS.equals(exitCode)) {
-                    message = "exit_code: " + exitCode + ", message: " + m.get("message");
-                    throw new GlassFishClientException(message);
-                }
-            }
-        } else if (statusCode == 404) {
-            message = " [status: " + statusCode + "]";
-            log.warning(message);
-        } else {
-            message = " [status: " + statusCode + "]";
-            log.severe(message);
-            throw new GlassFishClientException(message);
-        }
-
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> Map<String, T> extractExtraProperties(Map<String, Object> responseMap) {
-        return (Map<String, T>) responseMap.get("extraProperties");
+        return bodyExtractor.extract(response, type);
     }
 
     private HttpResponse<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
