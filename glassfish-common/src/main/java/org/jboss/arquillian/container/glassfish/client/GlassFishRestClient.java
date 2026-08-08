@@ -103,14 +103,9 @@ public class GlassFishRestClient {
             queryParams, GlassFishResponse.class);
     }
 
-    /** Get the list of all server instances. */
+    /** Get the list of all server instances with their statuses. */
     public List<Map<String, Object>> getInstancesList() {
-        return getInstancesList("/list-instances");
-    }
-
-    /** Get the list of server instances from a REST resource. */
-    public List<Map<String, Object>> getInstancesList(String resourceUrl) {
-        Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
+        Map<String, Object> responseMap = executeGet("/list-instances", Map.class);
         List<Map<String, Object>> instancesList = new ArrayList<>();
         Map<String, Object> extraProperties = extraProperties(responseMap);
         if (extraProperties != null) {
