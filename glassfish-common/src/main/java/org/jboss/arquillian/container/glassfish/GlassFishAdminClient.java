@@ -20,12 +20,12 @@
  */
 package org.jboss.arquillian.container.glassfish;
 
-import org.jboss.arquillian.container.glassfish.client.DeploymentResponse;
+import org.jboss.arquillian.container.glassfish.client.GlassFishResponse;
 import org.jboss.arquillian.container.glassfish.client.GlassFishClientException;
 import org.jboss.arquillian.container.glassfish.client.GlassFishHttpClient;
 import org.jboss.arquillian.container.glassfish.client.MultipartBodyPublisher;
 import org.jboss.arquillian.container.glassfish.client.NodeAddress;
-import org.jboss.arquillian.container.glassfish.client.VersionResponse;
+import org.jboss.arquillian.container.glassfish.client.GlassFishResponse;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.spi.client.container.LifecycleException;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
@@ -166,7 +166,7 @@ public class GlassFishAdminClient {
     private static final String GLASSFISH_VERSION = "/version";
 
     private void setGlassFishVersion() {
-        VersionResponse versionResponse = getClientUtil().getVersion();
+        GlassFishResponse versionResponse = getClientUtil().getVersion();
         if (versionResponse != null && versionResponse.extraProperties() != null) {
             Object versionNumberObj = versionResponse.extraProperties().get("version-number");
             if (versionNumberObj instanceof String version) {
@@ -294,9 +294,9 @@ public class GlassFishAdminClient {
         getClientUtil().deployApplication(form);
 
         // Fetch the list of SubComponents of the application
-        DeploymentResponse subComponentsResponse = getClientUtil()
+        GlassFishResponse subComponentsResponse = getClientUtil()
             .listSubComponents(name, null);
-        var subComponents = subComponentsResponse.properties();
+        var subComponents = (Map<String, String>) subComponentsResponse.extraProperties().get("properties");
 
         // Build up the HTTPContext object using the nodeAddress information
         int port = nodeAddress.httpPort();
@@ -312,7 +312,7 @@ public class GlassFishAdminClient {
                 if (WEBMODULE.equals(subComponent.getValue())) {
 
                     @SuppressWarnings("unchecked")
-                    var children = (List<Map<String, Map<String, String>>>) (Object) subComponentsResponse.children();
+                    var children = (List<Map<String, Map<String, String>>>) (Object) subComponentsResponse.extraProperties().get("children");
                     // Override the application contextRoot by the webmodul's contextRoot
                     contextRoot = resolveWebModuleContextRoot(componentName, children);
                     resolveWebModuleSubComponents(name, componentName, contextRoot, httpContext);
@@ -433,9 +433,9 @@ public class GlassFishAdminClient {
             "id", module,
             "type", "servlets");
 
-        DeploymentResponse subComponentsResponse = getClientUtil()
+        GlassFishResponse subComponentsResponse = getClientUtil()
             .listSubComponents(name, queryParams);
-        Map<String, String> subComponents = subComponentsResponse.properties();
+        Map<String, String> subComponents = (Map<String, String>) subComponentsResponse.extraProperties().get("properties");
 
         String componentName;
         for (Map.Entry<String, String> subComponent : subComponents.entrySet()) {
@@ -597,9 +597,9 @@ public class GlassFishAdminClient {
             .replace("{target}", attributes.get("name"));
         String resolvedPath = GlassFishHttpClient.resolveTemplates(VIRTUAL_SERVERS,
             Map.of("config", config));
-        DeploymentResponse virtualServersResponse = getClientUtil()
-            .executeGet(resolvedPath, DeploymentResponse.class);
-        List<Map<String, Object>> virtualServers = virtualServersResponse.children();
+        GlassFishResponse virtualServersResponse = getClientUtil()
+            .executeGet(resolvedPath, GlassFishResponse.class);
+        List<Map<String, Object>> virtualServers = (List<Map<String, Object>>) virtualServersResponse.extraProperties().get("children");
         List<String> virtualServerNames = new ArrayList<>();
         for (Map<String, Object> virtualServer : virtualServers) {
             String virtualServerName = (String) virtualServer.get("message");

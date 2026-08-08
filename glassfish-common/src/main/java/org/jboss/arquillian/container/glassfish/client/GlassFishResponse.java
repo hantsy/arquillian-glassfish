@@ -21,9 +21,11 @@ import jakarta.json.bind.annotation.JsonbProperty;
 import java.util.Map;
 
 /**
- * Typed response from GlassFish REST {@code /version} endpoint.
+ * Generic typed response from the GlassFish REST admin API.
+ * All GlassFish REST endpoints return this envelope with
+ * endpoint-specific data nested inside {@code extraProperties}.
  */
-public record VersionResponse(
+public record GlassFishResponse(
     String message,
     @JsonbProperty("exit_code") String exitCode,
     Map<String, Object> extraProperties) {

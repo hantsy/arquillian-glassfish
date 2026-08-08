@@ -88,31 +88,31 @@ public class GlassFishHttpClient {
     /**
      * Get GlassFish server version information.
      */
-    public VersionResponse getVersion() {
-        return executeGet("/version", VersionResponse.class);
+    public GlassFishResponse getVersion() {
+        return executeGet("/version", GlassFishResponse.class);
     }
 
     /**
      * Deploy an application via multipart POST.
      */
-    public DeploymentResponse deployApplication(MultipartBodyPublisher form) {
-        return executePost("/applications/application", form, DeploymentResponse.class);
+    public GlassFishResponse deployApplication(MultipartBodyPublisher form) {
+        return executePost("/applications/application", form, GlassFishResponse.class);
     }
 
     /**
      * Undeploy an application via multipart POST.
      */
-    public DeploymentResponse undeployApplication(String name, MultipartBodyPublisher form) {
+    public GlassFishResponse undeployApplication(String name, MultipartBodyPublisher form) {
         String path = "/applications/application/" + name;
-        return executePost(path, form, DeploymentResponse.class);
+        return executePost(path, form, GlassFishResponse.class);
     }
 
     /**
      * List sub-components of a deployed application.
      */
-    public DeploymentResponse listSubComponents(String name, Map<String, String> queryParams) {
+    public GlassFishResponse listSubComponents(String name, Map<String, String> queryParams) {
         return executeGet("/applications/application/" + name + "/list-sub-components",
-            queryParams, DeploymentResponse.class);
+            queryParams, GlassFishResponse.class);
     }
 
     /**
