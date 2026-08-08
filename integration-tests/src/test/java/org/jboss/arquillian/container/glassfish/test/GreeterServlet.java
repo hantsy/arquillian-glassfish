@@ -14,29 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.arquillian.container.glassfish.managed;
 
-import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit5.ArquillianExtension;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.EmptyAsset;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.jupiter.api.extension.ExtendWith;
+package org.jboss.arquillian.container.glassfish.test;
+
+import jakarta.ejb.EJB;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
- * Verifies arquillian tests can run in container mode with this REST based container.
+ * Simple servlet for testing deployment.
  *
  * @author <a href="http://community.jboss.org/people/aslak">Aslak Knutsen</a>
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
- * @author <a href="http://community.jboss.org/people/dan.j.allen">Dan Allen</a>
  */
-@ExtendWith(ArquillianExtension.class)
-public class GlassFishManagedDeployWarTest extends GlassFishManagedDeploymentTestTemplate {
+@WebServlet(urlPatterns = "/Greeter")
+public class GreeterServlet extends HttpServlet {
+    private static final long serialVersionUID = 8249673615048070666L;
 
-    @Deployment(testable = false)
-    public static WebArchive getTestArchive() {
-        return ShrinkWrap.create(WebArchive.class, "test.war")
-            .addClasses(GreeterServlet.class, Greeter.class)
-            .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml");
+    @EJB
+    private Greeter greeter;
+
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().append(this.greeter.greet());
     }
 }

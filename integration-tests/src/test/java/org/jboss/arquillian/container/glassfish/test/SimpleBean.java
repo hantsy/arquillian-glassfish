@@ -14,11 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.arquillian.container.glassfish.managed;
+package org.jboss.arquillian.container.glassfish.test;
 
 import jakarta.inject.Singleton;
 
 @Singleton
 public class SimpleBean {
 
+    public String hello() {
+        return "HelloCDI";
+    }
 }

@@ -14,31 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.jboss.arquillian.container.glassfish.test;
 
-/**
- * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
- */
-package org.jboss.arquillian.container.glassfish.remote;
-
-import jakarta.servlet.annotation.WebServlet;
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit5.ArquillianExtension;
+import org.jboss.arquillian.junit5.container.annotation.ArquillianTest;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.logging.Logger;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 
 /**
  * Verifies arquillian tests can run in client mode with this REST based container.
@@ -47,39 +31,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
  * @author <a href="http://community.jboss.org/people/dan.j.allen">Dan Allen</a>
  */
-@ExtendWith(ArquillianExtension.class)
-public class GlassFishRestDeployEarTest {
-    /**
-     * Logger
-     */
-    private static final Logger log = Logger.getLogger(GlassFishRestDeployEarTest.class.getName());
+@ArquillianTest
+public class GlassFishDeployEarTest extends GlassFishDeploymentTestTemplate {
 
-    /**
-     * Deployment for the test
-     */
     @Deployment(testable = false)
     public static Archive<?> getTestArchive() {
         final WebArchive war = ShrinkWrap.create(WebArchive.class, "test.war")
-            .addClasses(GreeterServlet.class);
+            .addClasses(greeterImplementationBasedOnDerbyEnabled());
         final JavaArchive ejb = ShrinkWrap.create(JavaArchive.class, "test.jar")
             .addClasses(Greeter.class);
-        final EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class, "test.ear")
+        return ShrinkWrap.create(EnterpriseArchive.class, "test.ear")
             .setApplicationXML("application.xml")
             .addAsModule(war)
             .addAsModule(ejb);
-        log.info(ear.toString(true));
-        return ear;
-    }
-
-    @Test
-    public void shouldBeAbleToDeployEnterpriseArchive() throws Exception {
-        final String servletPath = GreeterServlet.class.getAnnotation(WebServlet.class).urlPatterns()[0];
-
-        final URLConnection response = new URL("http://localhost:8080/test" + servletPath).openConnection();
-
-        BufferedReader in = new BufferedReader(new InputStreamReader(response.getInputStream()));
-        final String result = in.readLine();
-
-        assertEquals("Hello", result);
     }
 }

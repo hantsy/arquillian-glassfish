@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.1.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 https://maven.apache.org/xsd/maven-4.1.0.xsd">
+
+  <parent>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>arquillian-glassfish-tests</artifactId>
+  <name>Arquillian Container GlassFish Integration Tests 7.x</name>
+  <description>Integration tests for GlassFish Managed and Remote container adapters</description>
+
+  <properties>
+    <glassfish.version>7.0.14</glassfish.version>
+    <glassfish.home>${project.build.directory}/glassfish7</glassfish.home>
+  </properties>
+
+  <dependencies>
+    <!-- Both container adapter implementations (always on classpath) -->
+    <dependency>
+      <groupId>io.github.hantsy.arquillian</groupId>
+      <artifactId>arquillian-glassfish-managed</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.github.hantsy.arquillian</groupId>
+      <artifactId>arquillian-glassfish-remote</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Arquillian JUnit5 container -->
+    <dependency>
+      <groupId>org.jboss.arquillian.junit5</groupId>
+      <artifactId>arquillian-junit5-container</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- ShrinkWrap Maven resolver -->
+    <dependency>
+      <groupId>org.jboss.shrinkwrap.resolver</groupId>
+      <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- JUnit Jupiter -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Surefire runs unit tests; we skip it (all tests are integration tests) -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+
+      <!-- Failsafe runs integration tests -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- GlassFish 7.x Managed (active by default) -->
+    <profile>
+      <id>glassfish-managed</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <testResources>
+          <testResource>
+            <directory>src/test/resources</directory>
+          </testResource>
+          <testResource>
+            <directory>src/test/resources/arq-glassfish-managed</directory>
+          </testResource>
+        </testResources>
+        <plugins>
+          <!-- Download and unpack GlassFish for managed tests -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>setup-glassfish</id>
+                <phase>pre-integration-test</phase>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <configuration>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>org.glassfish.main.distributions</groupId>
+                      <artifactId>glassfish</artifactId>
+                      <version>${glassfish.version}</version>
+                      <type>zip</type>
+                      <outputDirectory>${project.build.directory}</outputDirectory>
+                    </artifactItem>
+                  </artifactItems>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- Pass system properties to failsafe -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <glassfish.home>${glassfish.home}</glassfish.home>
+                <enableDerby>false</enableDerby>
+                <arquillian.launch>glassfish-managed</arquillian.launch>
+              </systemPropertyVariables>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- GlassFish Remote -->
+    <profile>
+      <id>glassfish-remote</id>
+      <build>
+        <testResources>
+          <testResource>
+            <directory>src/test/resources</directory>
+          </testResource>
+          <testResource>
+            <directory>src/test/resources/arq-glassfish-remote</directory>
+          </testResource>
+        </testResources>
+        <plugins>
+          <!-- Pass system properties to failsafe -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <arquillian.launch>glassfish-remote</arquillian.launch>
+              </systemPropertyVariables>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- GlassFish 8.x version override -->
+    <profile>
+      <id>glassfish8</id>
+      <properties>
+        <glassfish.version>8.0.4</glassfish.version>
+        <glassfish.home>${project.build.directory}/glassfish8</glassfish.home>
+      </properties>
+    </profile>
+  </profiles>
+</project>

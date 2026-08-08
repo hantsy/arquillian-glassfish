@@ -14,49 +14,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.arquillian.container.glassfish.remote;
+package org.jboss.arquillian.container.glassfish.test;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit5.ArquillianExtension;
+import org.jboss.arquillian.junit5.container.annotation.ArquillianTest;
 import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.Test;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * A test to serve as a regression test for ARQ-658.
  * <p>
- * The deployment created by this class, does not have an application.xml file.
- * As a result, the context root is created by GlassFish,
- * instead of being specified by the developer.
- * Such context roots do not begin with a forward slash,
- * and the Arquillian REST client should recognize them.
+ * The deployment created by this class, does not have an application.xml file. As a result, the
+ * context root is created by GlassFish, instead of being specified by the developer. Such context
+ * roots do not begin with a forward slash, and the Arquillian REST client should recognize them.
  * <p>
- * The class is a converse test for the GlassFishRestDeployEarTest class,
- * which adds an application.xml file with a user-specified context root.
+ * The class is a converse test for the GlassFishRestDeployEarTest class, which adds an
+ * application.xml file with a user-specified context root.
  *
  * @author Vineet Reynolds
  */
-@ExtendWith(ArquillianExtension.class)
+@ArquillianTest
 public class GlassFishDeployWithoutAppXmlTest {
+
     @Inject
     private Client client;
 
     @Deployment
     public static EnterpriseArchive createTestArchive() {
-        JavaArchive jar = ShrinkWrap
-            .create(JavaArchive.class, "test.jar")
+        JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "test.jar")
             .addClasses(Client.class, GlassFishDeployWithoutAppXmlTest.class)
             .addAsManifestResource(EmptyAsset.INSTANCE, ArchivePaths.create("beans.xml"));
-        EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class, "test.ear").addAsLibrary(jar);
+        EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class, "test.ear")
+            .addAsLibrary(jar);
         return ear;
     }
 
@@ -70,3 +68,4 @@ public class GlassFishDeployWithoutAppXmlTest {
 class Client {
 
 }
+

@@ -58,49 +58,5 @@
       <groupId>org.jboss.arquillian.testenricher</groupId>
       <artifactId>arquillian-testenricher-initialcontext</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>org.jboss.arquillian.junit5</groupId>
-      <artifactId>arquillian-junit5-container</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.shrinkwrap.resolver</groupId>
-      <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <skip>true</skip>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-  <profiles>
-    <profile>
-      <id>integration</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <skip>false</skip>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>

@@ -14,32 +14,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.jboss.arquillian.container.glassfish.test;
 
-package org.jboss.arquillian.container.glassfish.managed;
-
+import jakarta.annotation.Resource;
 import jakarta.ejb.EJB;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
- * Simple servlet for testing deployment.
+ * Simple servlet for testing deployment with enabled derby database.
  *
  * @author <a href="http://community.jboss.org/people/aslak">Aslak Knutsen</a>
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
  */
 @WebServlet(urlPatterns = "/Greeter")
-public class GreeterServlet extends HttpServlet {
+public class GreeterServletWithDerby extends HttpServlet {
+
+    private static final String GET_LOG_ARCHIVE_MODE_QUERY =
+        "VALUES SYSCS_UTIL.SYSCS_GET_DATABASE_PROPERTY('derby.storage.logArchiveMode')";
+
     private static final long serialVersionUID = 8249673615048070666L;
 
     @EJB
     private Greeter greeter;
 
+    @Resource(name = "jdbc/__default")
+    private DataSource dataSource;
+
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.getWriter().append(this.greeter.greet());
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(GET_LOG_ARCHIVE_MODE_QUERY)) {
+
+            rs.next();
+            final PrintWriter writer = resp.getWriter();
+            if (!rs.getBoolean(1)) {
+                writer.append(this.greeter.greet());
+            } else {
+                writer.append("Something terrible happened! No greetings! derby.storage.logArchiveMode is set to TRUE");
+            }
+        } catch (SQLException ex) {
+            throw new ServletException(ex);
+        }
     }
 }

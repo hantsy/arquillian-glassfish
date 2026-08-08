@@ -14,22 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.arquillian.container.glassfish.managed;
+package org.jboss.arquillian.container.glassfish.test;
 
-import jakarta.ejb.Stateless;
-import java.io.Serializable;
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit5.container.annotation.ArquillianTest;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.asset.EmptyAsset;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
 
 /**
- * Basic SLSB for injection.
+ * Verifies arquillian tests can run in client mode with this REST based container.
  *
  * @author <a href="http://community.jboss.org/people/aslak">Aslak Knutsen</a>
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
+ * @author <a href="http://community.jboss.org/people/dan.j.allen">Dan Allen</a>
  */
-@Stateless
-public class Greeter implements Serializable {
-    private static final long serialVersionUID = 6410949671035595273L;
+@ArquillianTest
+public class GlassFishDeployWarTest extends GlassFishDeploymentTestTemplate {
 
-    public String greet() {
-        return "Hello";
+    @Deployment(testable = false)
+    public static WebArchive getTestArchive() {
+        return ShrinkWrap.create(WebArchive.class, "test.war")
+            .addClasses(GreeterServlet.class, Greeter.class)
+            .addAsWebInfResource(EmptyAsset.INSTANCE, "beans.xml");
     }
 }

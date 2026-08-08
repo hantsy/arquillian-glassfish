@@ -14,35 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.jboss.arquillian.container.glassfish.test;
+
+import jakarta.ejb.Stateless;
+import java.io.Serializable;
 
 /**
- * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
- */
-package org.jboss.arquillian.container.glassfish.remote;
-
-import jakarta.ejb.EJB;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
-/**
- * Simple servlet for testing deployment.
+ * Basic SLSB for injection.
  *
  * @author <a href="http://community.jboss.org/people/aslak">Aslak Knutsen</a>
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
  */
-@WebServlet(urlPatterns = "/Greeter")
-public class GreeterServlet extends HttpServlet {
-    private static final long serialVersionUID = 8249673615048070666L;
+@Stateless
+public class Greeter implements Serializable {
+    private static final long serialVersionUID = 6410949671035595273L;
 
-    @EJB
-    private Greeter greeter;
-
-    @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.getWriter().append(this.greeter.greet());
+    public String greet() {
+        return "Hello";
     }
 }

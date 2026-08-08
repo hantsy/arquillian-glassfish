@@ -1,4 +1,4 @@
-package org.jboss.arquillian.container.glassfish.managed;
+package org.jboss.arquillian.container.glassfish.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -11,7 +11,7 @@ import org.jboss.arquillian.test.api.ArquillianResource;
 import org.junit.jupiter.api.Test;
 
 
-public abstract class GlassFishManagedDeploymentTestTemplate {
+public abstract class GlassFishDeploymentTestTemplate {
 
     @ArquillianResource
     private URL deploymentUrl;
@@ -31,7 +31,7 @@ public abstract class GlassFishManagedDeploymentTestTemplate {
         assertEquals("Hello", result);
     }
 
-    static Class<?> greeterImplementationBasedOnDerbyEnabled() {
+    public static Class<?> greeterImplementationBasedOnDerbyEnabled() {
         if (Boolean.parseBoolean(System.getProperty("enableDerby"))) {
             return GreeterServletWithDerby.class;
         }
