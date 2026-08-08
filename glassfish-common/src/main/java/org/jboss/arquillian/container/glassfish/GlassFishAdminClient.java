@@ -22,7 +22,7 @@ package org.jboss.arquillian.container.glassfish;
 
 import org.jboss.arquillian.container.glassfish.client.GlassFishResponse;
 import org.jboss.arquillian.container.glassfish.client.GlassFishClientException;
-import org.jboss.arquillian.container.glassfish.client.GlassFishHttpClient;
+import org.jboss.arquillian.container.glassfish.client.GlassFishRestClient;
 import org.jboss.arquillian.container.glassfish.client.MultipartBodyPublisher;
 import org.jboss.arquillian.container.glassfish.client.NodeAddress;
 import org.jboss.arquillian.container.glassfish.client.GlassFishResponse;
@@ -74,7 +74,7 @@ public class GlassFishAdminClient {
 
     private ServerStartegy serverInstance = null;
 
-    private GlassFishHttpClient clientUtil;
+    private GlassFishRestClient clientUtil;
 
     private NodeAddress nodeAddress = null;
 
@@ -96,7 +96,7 @@ public class GlassFishAdminClient {
         adminBaseUrl = dasAddress.getURI(configuration.isAdminHttps())
             .resolve("/management/domain").toString();
 
-        this.clientUtil = new GlassFishHttpClient(configuration, adminBaseUrl);
+        this.clientUtil = new GlassFishRestClient(configuration, adminBaseUrl);
     }
 
     /**
@@ -595,7 +595,7 @@ public class GlassFishAdminClient {
     private List<String> getVirtualServers(Map<String, String> attributes) {
         String config = attributes.get("configRef")
             .replace("{target}", attributes.get("name"));
-        String resolvedPath = GlassFishHttpClient.resolveTemplates(VIRTUAL_SERVERS,
+        String resolvedPath = GlassFishRestClient.resolveTemplates(VIRTUAL_SERVERS,
             Map.of("config", config));
         GlassFishResponse virtualServersResponse = getClientUtil()
             .executeGet(resolvedPath, GlassFishResponse.class);
@@ -743,7 +743,7 @@ public class GlassFishAdminClient {
         this.target = target;
     }
 
-    private GlassFishHttpClient getClientUtil() {
+    private GlassFishRestClient getClientUtil() {
         return clientUtil;
     }
 

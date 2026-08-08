@@ -43,7 +43,7 @@ import java.util.logging.Logger;
  * Low-level HTTP client for the GlassFish admin REST API.
  * Uses {@link java.net.http.HttpClient} and Jakarta JSONB for JSON parsing.
  */
-public class GlassFishHttpClient {
+public class GlassFishRestClient {
 
     public static final String SUCCESS = "SUCCESS";
     public static final String WARNING = "WARNING";
@@ -57,9 +57,9 @@ public class GlassFishHttpClient {
     private final String adminBaseUrl;
     private final HttpClient httpClient;
 
-    private static final Logger log = Logger.getLogger(GlassFishHttpClient.class.getName());
+    private static final Logger log = Logger.getLogger(GlassFishRestClient.class.getName());
 
-    public GlassFishHttpClient(CommonGlassFishConfiguration configuration, String adminBaseUrl) {
+    public GlassFishRestClient(CommonGlassFishConfiguration configuration, String adminBaseUrl) {
         this.configuration = configuration;
         this.adminBaseUrl = adminBaseUrl;
         HttpClient.Builder builder = HttpClient.newBuilder()
