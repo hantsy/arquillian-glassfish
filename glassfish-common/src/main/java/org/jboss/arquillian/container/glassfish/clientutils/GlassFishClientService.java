@@ -21,7 +21,6 @@
 package org.jboss.arquillian.container.glassfish.clientutils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -367,10 +366,10 @@ public class GlassFishClientService implements GlassFishClient {
     private void resolveWebModuleSubComponents(String name, String module, String context,
         HTTPContext httpContext) {
         // Fetch the list of SubComponents of the application
-        Map<String, String> queryParams = new HashMap<>();
-        queryParams.put("appname", name);
-        queryParams.put("id", module);
-        queryParams.put("type", "servlets");
+        Map<String, String> queryParams = Map.of(
+            "appname", name,
+            "id", module,
+            "type", "servlets");
 
         Map<String, Object> subComponentsResponce = getClientUtil().GETRequest(
             "/applications/application/{application}/list-sub-components",
