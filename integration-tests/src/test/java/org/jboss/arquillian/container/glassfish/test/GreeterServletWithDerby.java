@@ -30,8 +30,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Simple servlet for testing deployment with enabled derby database.
@@ -47,8 +45,6 @@ public class GreeterServletWithDerby extends HttpServlet {
 
     private static final long serialVersionUID = 8249673615048070666L;
 
-    private static final Logger logger = Logger.getLogger(GreeterServletWithDerby.class.getName());
-
     @EJB
     private Greeter greeter;
 
@@ -57,14 +53,9 @@ public class GreeterServletWithDerby extends HttpServlet {
 
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // test the DataSource and thus the working DB connection with an internal Derby query
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet rs = null;
-        try {
-            conn = dataSource.getConnection();
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery(GET_LOG_ARCHIVE_MODE_QUERY);
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(GET_LOG_ARCHIVE_MODE_QUERY)) {
 
             rs.next();
             final PrintWriter writer = resp.getWriter();
@@ -75,34 +66,6 @@ public class GreeterServletWithDerby extends HttpServlet {
             }
         } catch (SQLException ex) {
             throw new ServletException(ex);
-        } finally {
-            closeResources(conn, stmt, rs);
-        }
-    }
-
-    private void closeResources(Connection conn, Statement stmt, ResultSet rs) {
-        try {
-            if (rs != null) {
-                conn.close();
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Failed closing resource!", e);
-        }
-
-        try {
-            if (rs != null) {
-                stmt.close();
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Failed closing resource!", e);
-        }
-
-        try {
-            if (rs != null) {
-                rs.close();
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Failed closing resource!", e);
         }
     }
 }
