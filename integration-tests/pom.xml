@@ -12,7 +12,7 @@
   <description>Integration tests for GlassFish Managed and Remote container adapters</description>
 
   <properties>
-    <glassfish.version>7.0.14</glassfish.version>
+    <glassfish.version>7.0.25</glassfish.version>
     <glassfish.home>${project.build.directory}/glassfish7</glassfish.home>
   </properties>
 
@@ -171,7 +171,7 @@
     <profile>
       <id>glassfish8</id>
       <properties>
-        <glassfish.version>8.0.4</glassfish.version>
+        <glassfish.version>8.0.5</glassfish.version>
         <glassfish.home>${project.build.directory}/glassfish8</glassfish.home>
       </properties>
     </profile>
