@@ -20,39 +20,39 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpRequest;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Flow;
 
 /**
- * Lightweight multipart/form-data body builder for {@link java.net.http.HttpClient}.
- * Replaces Jersey's {@code FormDataMultiPart} / {@code StreamDataBodyPart}.
+ * Immutable multipart/form-data body that implements {@link HttpRequest.BodyPublisher}.
+ * Use the {@link Builder} to assemble form data, then call {@link Builder#build()}.
+ * <p>
+ * Usage:
+ * <pre>{@code
+ * MultipartBody body = MultipartBody.newBuilder()
+ *     .addField("name", "myapp", "text/plain")
+ *     .addFilePart("id", "app.war", inputStream)
+ *     .build();
+ * httpClient.send(HttpRequest.newBuilder()
+ *     .header("Content-Type", body.getContentType())
+ *     .POST(body)
+ *     .build(), BodyHandlers.ofString());
+ * }</pre>
  */
-public class MultipartBody {
+public final class MultipartBody implements HttpRequest.BodyPublisher {
 
     private static final String CRLF = "\r\n";
     private static final String TWO_HYPHENS = "--";
 
     private final String boundary;
-    private final List<TextPart> textParts = new ArrayList<>();
-    private FilePart filePart;
+    private final byte[] body;
 
-    public MultipartBody() {
-        this.boundary = "Boundary-" + System.currentTimeMillis();
-    }
-
-    /**
-     * Add a text field to the multipart form.
-     */
-    public void addField(String name, String value, String contentType) {
-        textParts.add(new TextPart(name, value, contentType));
-    }
-
-    /**
-     * Add a binary file part to the multipart form.
-     */
-    public void addFilePart(String name, String filename, InputStream data) {
-        this.filePart = new FilePart(name, filename, data);
+    private MultipartBody(String boundary, byte[] body) {
+        this.boundary = boundary;
+        this.body = body;
     }
 
     /**
@@ -62,85 +62,141 @@ public class MultipartBody {
         return "multipart/form-data; boundary=" + boundary;
     }
 
+    @Override
+    public long contentLength() {
+        return body.length;
+    }
+
+    @Override
+    public void subscribe(Flow.Subscriber<? super ByteBuffer> subscriber) {
+        HttpRequest.BodyPublishers.ofByteArray(body).subscribe(subscriber);
+    }
+
     /**
-     * Builds an {@link HttpRequest.BodyPublisher} for this multipart form.
+     * Create a new {@link Builder}.
      */
-    public HttpRequest.BodyPublisher toBodyPublisher() throws IOException {
-        if (filePart != null) {
-            return buildWithFilePart();
-        }
-        return buildTextOnly();
+    public static Builder newBuilder() {
+        return new Builder();
     }
 
-    private HttpRequest.BodyPublisher buildTextOnly() {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        for (TextPart part : textParts) {
-            writeBoundary(out);
-            writeTextPart(out, part);
+    /**
+     * Mutable builder for assembling a {@link MultipartBody}.
+     */
+    public static final class Builder {
+
+        private static final String DEFAULT_BOUNDARY = "Boundary-" + System.currentTimeMillis();
+
+        private final String boundary;
+        private final List<TextPart> textParts = new ArrayList<>();
+        private FilePart filePart;
+
+        Builder() {
+            this.boundary = DEFAULT_BOUNDARY;
         }
-        writeClosingBoundary(out);
-        return HttpRequest.BodyPublishers.ofByteArray(out.toByteArray());
-    }
 
-    private HttpRequest.BodyPublisher buildWithFilePart() throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        for (TextPart part : textParts) {
-            writeBoundary(out);
-            writeTextPart(out, part);
+        /**
+         * Add a text field.
+         */
+        public Builder addField(String name, String value, String contentType) {
+            textParts.add(new TextPart(name, value, contentType));
+            return this;
         }
-        writeBoundary(out);
-        writeFilePartHeader(out, filePart);
-        byte[] preamble = out.toByteArray();
 
-        byte[] fileData = filePart.data.readAllBytes();
-        byte[] closing = (CRLF + TWO_HYPHENS + boundary + TWO_HYPHENS + CRLF).getBytes(StandardCharsets.UTF_8);
-
-        ByteArrayOutputStream all = new ByteArrayOutputStream();
-        all.write(preamble);
-        all.write(fileData);
-        all.write(closing);
-        return HttpRequest.BodyPublishers.ofByteArray(all.toByteArray());
-    }
-
-    private void writeBoundary(ByteArrayOutputStream out) {
-        try {
-            out.write((TWO_HYPHENS + boundary + CRLF).getBytes(StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        /**
+         * Add a binary file part.
+         */
+        public Builder addFilePart(String name, String filename, InputStream data) {
+            this.filePart = new FilePart(name, filename, data);
+            return this;
         }
-    }
 
-    private void writeClosingBoundary(ByteArrayOutputStream out) {
-        try {
-            out.write((TWO_HYPHENS + boundary + TWO_HYPHENS + CRLF).getBytes(StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        /**
+         * Build the immutable {@link MultipartBody}.
+         */
+        public MultipartBody build() throws IOException {
+            byte[] all;
+            if (filePart != null) {
+                all = buildWithFilePart();
+            } else {
+                all = buildTextOnly();
+            }
+            return new MultipartBody(boundary, all);
         }
-    }
 
-    private void writeTextPart(ByteArrayOutputStream out, TextPart part) {
-        try {
-            out.write(("Content-Disposition: form-data; name=\"" + part.name + "\"" + CRLF).getBytes(StandardCharsets.UTF_8));
-            out.write(("Content-Type: " + part.contentType + CRLF).getBytes(StandardCharsets.UTF_8));
-            out.write(CRLF.getBytes(StandardCharsets.UTF_8));
-            out.write(part.value.getBytes(StandardCharsets.UTF_8));
-            out.write(CRLF.getBytes(StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        private byte[] buildTextOnly() {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            for (TextPart part : textParts) {
+                writeBoundary(out, boundary);
+                writeTextPart(out, part);
+            }
+            writeClosingBoundary(out, boundary);
+            return out.toByteArray();
         }
-    }
 
-    private void writeFilePartHeader(ByteArrayOutputStream out, FilePart part) {
-        try {
-            out.write(("Content-Disposition: form-data; name=\"" + part.name
-                + "\"; filename=\"" + part.filename + "\"" + CRLF).getBytes(StandardCharsets.UTF_8));
-            out.write(("Content-Type: application/octet-stream" + CRLF).getBytes(StandardCharsets.UTF_8));
-            out.write(CRLF.getBytes(StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        private byte[] buildWithFilePart() throws IOException {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            for (TextPart part : textParts) {
+                writeBoundary(out, boundary);
+                writeTextPart(out, part);
+            }
+            writeBoundary(out, boundary);
+            writeFilePartHeader(out, filePart);
+
+            byte[] preamble = out.toByteArray();
+            byte[] fileData = filePart.data.readAllBytes();
+            byte[] closing = (CRLF + TWO_HYPHENS + boundary + TWO_HYPHENS + CRLF)
+                .getBytes(StandardCharsets.UTF_8);
+
+            ByteArrayOutputStream all = new ByteArrayOutputStream();
+            all.write(preamble);
+            all.write(fileData);
+            all.write(closing);
+            return all.toByteArray();
         }
-    }
 
-    private record TextPart(String name, String value, String contentType) {}
-    private record FilePart(String name, String filename, InputStream data) {}
+        // --- serialization helpers ---
+
+        private static void writeBoundary(ByteArrayOutputStream out, String boundary) {
+            try {
+                out.write((TWO_HYPHENS + boundary + CRLF).getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Failed writing multipart boundary", e);
+            }
+        }
+
+        private static void writeClosingBoundary(ByteArrayOutputStream out, String boundary) {
+            try {
+                out.write((TWO_HYPHENS + boundary + TWO_HYPHENS + CRLF).getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Failed writing multipart closing boundary", e);
+            }
+        }
+
+        private static void writeTextPart(ByteArrayOutputStream out, TextPart part) {
+            try {
+                out.write(("Content-Disposition: form-data; name=\"" + part.name + "\"" + CRLF)
+                    .getBytes(StandardCharsets.UTF_8));
+                out.write(("Content-Type: " + part.contentType + CRLF).getBytes(StandardCharsets.UTF_8));
+                out.write(CRLF.getBytes(StandardCharsets.UTF_8));
+                out.write(part.value.getBytes(StandardCharsets.UTF_8));
+                out.write(CRLF.getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Failed writing multipart text part", e);
+            }
+        }
+
+        private static void writeFilePartHeader(ByteArrayOutputStream out, FilePart part) {
+            try {
+                out.write(("Content-Disposition: form-data; name=\"" + part.name
+                    + "\"; filename=\"" + part.filename + "\"" + CRLF).getBytes(StandardCharsets.UTF_8));
+                out.write(("Content-Type: application/octet-stream" + CRLF).getBytes(StandardCharsets.UTF_8));
+                out.write(CRLF.getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Failed writing multipart file header", e);
+            }
+        }
+
+        private record TextPart(String name, String value, String contentType) {}
+        private record FilePart(String name, String filename, InputStream data) {}
+    }
 }

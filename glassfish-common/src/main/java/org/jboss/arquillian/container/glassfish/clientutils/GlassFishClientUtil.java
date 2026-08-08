@@ -175,7 +175,7 @@ public class GlassFishClientUtil {
             HttpRequest request = newPostBuilder()
                 .uri(URI.create(adminBaseUrl + additionalResourceUrl))
                 .header("Content-Type", form.getContentType())
-                .POST(form.toBodyPublisher())
+                .POST(form)
                 .build();
             HttpResponse<String> response = sendRequest(request);
             return getResponseMap(response);
