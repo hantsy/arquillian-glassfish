@@ -18,8 +18,10 @@
 /**
  * @author Z.Paulovics
  */
-package org.jboss.arquillian.container.glassfish.clientutils;
+package org.jboss.arquillian.container.glassfish.client;
 
+import jakarta.json.bind.Jsonb;
+import jakarta.json.bind.JsonbBuilder;
 import org.jboss.arquillian.container.glassfish.CommonGlassFishConfiguration;
 
 import javax.xml.stream.XMLInputFactory;
@@ -171,7 +173,7 @@ public class GlassFishHttpClient {
         return instancesList;
     }
 
-    public Map<String, Object> POSTMultiPartRequest(String additionalResourceUrl, MultipartBody form) {
+    public Map<String, Object> POSTMultiPartRequest(String additionalResourceUrl, MultipartBodyPublisher form) {
         try {
             HttpRequest request = newPostBuilder()
                 .uri(URI.create(adminBaseUrl + additionalResourceUrl))
@@ -190,7 +192,7 @@ public class GlassFishHttpClient {
      */
     private HttpRequest.Builder newGetBuilder() {
         return HttpRequest.newBuilder()
-            .header("Accept", "application/xml")
+            .header("Accept", "application/json")
             .header(CSRF_HEADER, CSRF_VALUE)
             .header(USER_AGENT_HEADER, USER_AGENT_VALUE);
     }
@@ -200,7 +202,7 @@ public class GlassFishHttpClient {
      */
     private HttpRequest.Builder newPostBuilder() {
         return HttpRequest.newBuilder()
-            .header("Accept", "application/xml")
+            .header("Accept", "application/json")
             .header(CSRF_HEADER, CSRF_VALUE)
             .header(USER_AGENT_HEADER, USER_AGENT_VALUE);
     }
@@ -415,6 +417,17 @@ public class GlassFishHttpClient {
             first = false;
         }
         return sb.toString();
+    }
+
+    /**
+     * Parse a JSON response body to a typed object using Jakarta JSONB.
+     */
+    public <T> T jsonbFromBody(String body, Class<T> type) {
+        try (Jsonb jsonb = JsonbBuilder.create()) {
+            return jsonb.fromJson(body, type);
+        } catch (Exception e) {
+            throw new GlassFishClientException("Failed to parse JSON response: " + body, e);
+        }
     }
 
     /**

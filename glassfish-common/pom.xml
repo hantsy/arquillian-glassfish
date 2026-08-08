@@ -18,5 +18,12 @@
       <artifactId>arquillian-container-test-spi</artifactId>
     </dependency>
 
+    <!-- Jakarta JSONB -->
+    <dependency>
+      <groupId>org.eclipse</groupId>
+      <artifactId>yasson</artifactId>
+      <version>3.0.4</version>
+    </dependency>
+
   </dependencies>
 </project>

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.jboss.arquillian.container.glassfish.clientutils;
+package org.jboss.arquillian.container.glassfish.client;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -42,7 +42,7 @@ import java.util.concurrent.Flow;
  *     .build(), BodyHandlers.ofString());
  * }</pre>
  */
-public final class MultipartBody implements HttpRequest.BodyPublisher {
+public final class MultipartBodyPublisher implements HttpRequest.BodyPublisher {
 
     private static final String CRLF = "\r\n";
     private static final String TWO_HYPHENS = "--";
@@ -50,7 +50,7 @@ public final class MultipartBody implements HttpRequest.BodyPublisher {
     private final String boundary;
     private final byte[] body;
 
-    private MultipartBody(String boundary, byte[] body) {
+    private MultipartBodyPublisher(String boundary, byte[] body) {
         this.boundary = boundary;
         this.body = body;
     }
@@ -113,14 +113,14 @@ public final class MultipartBody implements HttpRequest.BodyPublisher {
         /**
          * Build the immutable {@link MultipartBody}.
          */
-        public MultipartBody build() throws IOException {
+        public MultipartBodyPublisher build() throws IOException {
             byte[] all;
             if (filePart != null) {
                 all = buildWithFilePart();
             } else {
                 all = buildTextOnly();
             }
-            return new MultipartBody(boundary, all);
+            return new MultipartBodyPublisher(boundary, all);
         }
 
         private byte[] buildTextOnly() {

@@ -18,7 +18,7 @@
 /**
  * @author Z.Paulovics
  */
-package org.jboss.arquillian.container.glassfish.clientutils;
+package org.jboss.arquillian.container.glassfish.client;
 
 public class GlassFishClientException extends RuntimeException {
 

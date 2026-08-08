@@ -20,7 +20,7 @@
 package org.jboss.arquillian.container.glassfish.remote;
 
 import org.jboss.arquillian.container.glassfish.CommonGlassFishConfiguration;
-import org.jboss.arquillian.container.glassfish.clientutils.GlassFishAdminClient;
+import org.jboss.arquillian.container.glassfish.GlassFishAdminClient;
 import org.jboss.arquillian.container.spi.client.container.DeployableContainer;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.spi.client.container.LifecycleException;

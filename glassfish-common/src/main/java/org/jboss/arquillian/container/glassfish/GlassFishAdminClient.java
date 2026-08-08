@@ -18,7 +18,7 @@
 /**
  * @author Z.Paulovics
  */
-package org.jboss.arquillian.container.glassfish.clientutils;
+package org.jboss.arquillian.container.glassfish;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +30,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.jboss.arquillian.container.glassfish.CommonGlassFishConfiguration;
+import org.jboss.arquillian.container.glassfish.client.GlassFishClientException;
+import org.jboss.arquillian.container.glassfish.client.GlassFishHttpClient;
+import org.jboss.arquillian.container.glassfish.client.MultipartBodyPublisher;
+import org.jboss.arquillian.container.glassfish.client.NodeAddress;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.spi.client.container.LifecycleException;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
@@ -84,15 +87,12 @@ public class GlassFishAdminClient {
         this.configuration = configuration;
         this.target = configuration.getTarget();
 
-        final StringBuilder adminUrlBuilder = new StringBuilder()
-            .append(NodeAddress.getHttpProtocolPrefix(this.configuration.isAdminHttps()))
-            .append(this.configuration.getAdminHost()).append(":")
-            .append(this.configuration.getAdminPort());
-        DASUrl = adminUrlBuilder.toString();
-        adminUrlBuilder.append("/management/domain");
-        this.adminBaseUrl = adminUrlBuilder.toString();
+        NodeAddress dasAddress = new NodeAddress("server",
+            configuration.getAdminHost(), configuration.getAdminPort(), 0);
+        DASUrl = dasAddress.getURI(configuration.isAdminHttps()).toString();
+        adminBaseUrl = dasAddress.getURI(configuration.isAdminHttps())
+            .resolve("/management/domain").toString();
 
-        // Start up the jersey client layer
         this.clientUtil = new GlassFishHttpClient(configuration, adminBaseUrl);
     }
 
@@ -208,7 +208,7 @@ public class GlassFishAdminClient {
         String instanceStatus = null;
         for (var instance : instanceList) {
             for (var node : nodeAddressList) {
-                if (instance.get("name").equals(node.getServerName())) {
+                if (instance.get("name").equals(node.serverName())) {
                     instanceStatus = (String) instance.get("status");
                     if (RUNNING_STATUS.equals(instanceStatus)) {
                         return node;
@@ -220,7 +220,7 @@ public class GlassFishAdminClient {
         String message;
         if (nodeAddressList.size() == 1) {
             message =
-                "The " + nodeAddressList.get(0).getServerName() + " server-instance status is: "
+                "The " + nodeAddressList.get(0).serverName() + " server-instance status is: "
                     + instanceStatus;
         } else {
             message = "Could not fund any instance with RUNNING status in cluster: " + getTarget();
@@ -248,10 +248,10 @@ public class GlassFishAdminClient {
         try {
             InputStream deployment = archive.as(ZipExporter.class).exportAsInputStream();
             deploymentName = createDeploymentName(archiveName);
-            MultipartBody.Builder builder = MultipartBody.newBuilder()
+            MultipartBodyPublisher.Builder builder = MultipartBodyPublisher.newBuilder()
                 .addFilePart("id", archiveName, deployment);
             addDeployFormFields(deploymentName, builder);
-            final MultipartBody form = builder.build();
+            final MultipartBodyPublisher form = builder.build();
             HTTPContext httpContext = doDeploy(deploymentName, form);
             protocolMetaData.addContext(httpContext);
         } catch (GlassFishClientException | IOException e) {
@@ -272,7 +272,7 @@ public class GlassFishAdminClient {
         }
         deploymentName = createDeploymentName(archive.getName());
         try {
-            final MultipartBody form = MultipartBody.newBuilder()
+            final MultipartBodyPublisher form = MultipartBodyPublisher.newBuilder()
                 .addField("target", getConfiguration().getTarget(), "text/plain")
                 .addField("operation", DELETE_OPERATION, "text/plain")
                 .build();
@@ -290,7 +290,7 @@ public class GlassFishAdminClient {
      * @param form - a form of MediaType.MULTIPART_FORM_DATA_TYPE
      * @return subComponents - a map of SubComponents of the application
      */
-    private HTTPContext doDeploy(String name, MultipartBody form) {
+    private HTTPContext doDeploy(String name, MultipartBodyPublisher form) {
         // Deploy the application on the GlassFish server
         getClientUtil().POSTMultiPartRequest(APPLICATION, form);
 
@@ -301,8 +301,8 @@ public class GlassFishAdminClient {
         var subComponents = (Map<String, String>) subComponentsResponse.get("properties");
 
         // Build up the HTTPContext object using the nodeAddress information
-        int port = nodeAddress.getHttpPort();
-        HTTPContext httpContext = new HTTPContext(nodeAddress.getHost(), port);
+        int port = nodeAddress.httpPort();
+        HTTPContext httpContext = new HTTPContext(nodeAddress.host(), port);
 
         // Add the servlets to the HTTPContext
         String componentName;
@@ -332,7 +332,7 @@ public class GlassFishAdminClient {
      * @param name - application name form 	- form that include the target & operation fields
      * @return resultMap
      */
-    private Map<String, Object> doUndeploy(String name, MultipartBody form) {
+    private Map<String, Object> doUndeploy(String name, MultipartBodyPublisher form) {
         String path = APPLICATION_RESOURCE.replace("{name}", name);
         return getClientUtil().POSTMultiPartRequest(path, form);
     }
@@ -789,7 +789,7 @@ public class GlassFishAdminClient {
      * @param name    - deployment name
      * @param builder - multipart form builder
      */
-    private void addDeployFormFields(String name, MultipartBody.Builder builder) {
+    private void addDeployFormFields(String name, MultipartBodyPublisher.Builder builder) {
         builder.addField("name", name, "text/plain");
         builder.addField("target", getConfiguration().getTarget(), "text/plain");
         if (getConfiguration().getLibraries() != null) {
