@@ -20,7 +20,7 @@
 package org.jboss.arquillian.container.glassfish.remote;
 
 import org.jboss.arquillian.container.glassfish.CommonGlassFishConfiguration;
-import org.jboss.arquillian.container.glassfish.CommonGlassFishManager;
+import org.jboss.arquillian.container.glassfish.clientutils.GlassFishAdminClient;
 import org.jboss.arquillian.container.spi.client.container.DeployableContainer;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.spi.client.container.LifecycleException;
@@ -40,7 +40,7 @@ import java.util.logging.Logger;
 public class GlassFishRestDeployableContainer implements DeployableContainer<CommonGlassFishConfiguration> {
 
     private CommonGlassFishConfiguration configuration;
-    private CommonGlassFishManager<CommonGlassFishConfiguration> glassFishManager;
+    private GlassFishAdminClient adminClient;
 
     private static final Logger log = Logger.getLogger(GlassFishRestDeployableContainer.class.getName());
 
@@ -53,11 +53,11 @@ public class GlassFishRestDeployableContainer implements DeployableContainer<Com
             throw new IllegalArgumentException("configuration must not be null");
         }
         this.configuration = configuration;
-        this.glassFishManager = new CommonGlassFishManager<CommonGlassFishConfiguration>(configuration);
+        this.adminClient = new GlassFishAdminClient(configuration);
     }
 
     public void start() throws LifecycleException {
-        glassFishManager.start();
+        adminClient.start();
     }
 
     public void stop() throws LifecycleException {
@@ -69,11 +69,11 @@ public class GlassFishRestDeployableContainer implements DeployableContainer<Com
     }
 
     public ProtocolMetaData deploy(Archive<?> archive) throws DeploymentException {
-        return glassFishManager.deploy(archive);
+        return adminClient.deploy(archive);
     }
 
     public void undeploy(Archive<?> archive) throws DeploymentException {
-        glassFishManager.undeploy(archive);
+        adminClient.undeploy(archive);
     }
 
     public void deploy(Descriptor descriptor) throws DeploymentException {
