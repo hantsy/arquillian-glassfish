@@ -16,11 +16,10 @@
  */
 package org.jboss.arquillian.container.glassfish;
 
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.file.StreamDataBodyPart;
 import org.jboss.arquillian.container.glassfish.clientutils.GlassFishClient;
 import org.jboss.arquillian.container.glassfish.clientutils.GlassFishClientException;
 import org.jboss.arquillian.container.glassfish.clientutils.GlassFishClientService;
+import org.jboss.arquillian.container.glassfish.clientutils.MultipartBody;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.spi.client.container.LifecycleException;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
@@ -28,7 +27,6 @@ import org.jboss.arquillian.container.spi.client.protocol.metadata.ProtocolMetaD
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 
-import jakarta.ws.rs.core.MediaType;
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -84,8 +82,8 @@ public class CommonGlassFishManager<C extends CommonGlassFishConfiguration> {
             InputStream deployment = archive.as(ZipExporter.class).exportAsInputStream();
 
             // Build up the POST form to send to Glassfish
-            final FormDataMultiPart form = new FormDataMultiPart();
-            form.bodyPart(new StreamDataBodyPart("id", deployment, archiveName));
+            final MultipartBody form = new MultipartBody();
+            form.addFilePart("id", archiveName, deployment);
 
             deploymentName = createDeploymentName(archiveName);
             addDeployFormFields(deploymentName, form);
@@ -108,9 +106,9 @@ public class CommonGlassFishManager<C extends CommonGlassFishConfiguration> {
             deploymentName = createDeploymentName(archive.getName());
             try {
                 // Build up the POST form to send to Glassfish
-                final FormDataMultiPart form = new FormDataMultiPart();
-                form.field("target", this.configuration.getTarget(), MediaType.TEXT_PLAIN_TYPE);
-                form.field("operation", DELETE_OPERATION, MediaType.TEXT_PLAIN_TYPE);
+                final MultipartBody form = new MultipartBody();
+                form.addField("target", this.configuration.getTarget(), "text/plain");
+                form.addField("operation", DELETE_OPERATION, "text/plain");
                 glassFishClient.doUndeploy(this.deploymentName, form);
             } catch (GlassFishClientException e) {
                 throw new DeploymentException("Could not undeploy " + archive.getName(), e);
@@ -133,27 +131,27 @@ public class CommonGlassFishManager<C extends CommonGlassFishConfiguration> {
         return correctedName;
     }
 
-    private void addDeployFormFields(String name, FormDataMultiPart deployform) {
+    private void addDeployFormFields(String name, MultipartBody deployform) {
 
         // add the name field, the name is the archive filename without extension
-        deployform.field("name", name, MediaType.TEXT_PLAIN_TYPE);
+        deployform.addField("name", name, "text/plain");
 
         // add the target field (the default is "server" - Admin Server)
-        deployform.field("target", this.configuration.getTarget(), MediaType.TEXT_PLAIN_TYPE);
+        deployform.addField("target", this.configuration.getTarget(), "text/plain");
 
         // add the libraries field (optional)
         if (this.configuration.getLibraries() != null) {
-            deployform.field("libraries", this.configuration.getLibraries(), MediaType.TEXT_PLAIN_TYPE);
+            deployform.addField("libraries", this.configuration.getLibraries(), "text/plain");
         }
 
         // add the properties field (optional)
         if (this.configuration.getProperties() != null) {
-            deployform.field("properties", this.configuration.getProperties(), MediaType.TEXT_PLAIN_TYPE);
+            deployform.addField("properties", this.configuration.getProperties(), "text/plain");
         }
 
         // add the type field (optional, the only valid value is "osgi", other values are ommited)
         if (this.configuration.getType() != null && "osgi".equals(this.configuration.getType())) {
-            deployform.field("type", this.configuration.getType(), MediaType.TEXT_PLAIN_TYPE);
+            deployform.addField("type", this.configuration.getType(), "text/plain");
         }
     }
 }

@@ -20,21 +20,8 @@
  */
 package org.jboss.arquillian.container.glassfish.clientutils;
 
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.Invocation;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.Response;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-import org.glassfish.jersey.client.filter.CsrfProtectionFilter;
-import org.glassfish.jersey.logging.LoggingFeature;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.jboss.arquillian.container.glassfish.CommonGlassFishConfiguration;
 
-import jakarta.ws.rs.core.MediaType;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -42,15 +29,20 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static jakarta.ws.rs.core.HttpHeaders.USER_AGENT;
 
 public class GlassFishClientUtil {
 
@@ -64,19 +56,46 @@ public class GlassFishClientUtil {
      */
     public static final String WARNING = "WARNING";
 
+    private static final String CSRF_HEADER = "X-Requested-By";
+    private static final String CSRF_VALUE = "GlassFish REST Client";
+    private static final String USER_AGENT_HEADER = "User-Agent";
+
     private CommonGlassFishConfiguration configuration;
 
     private String adminBaseUrl;
+
+    private HttpClient httpClient;
 
     private static final Logger log = Logger.getLogger(GlassFishClientUtil.class.getName());
 
     public GlassFishClientUtil(CommonGlassFishConfiguration configuration, String adminBaseUrl) {
         this.configuration = configuration;
         this.adminBaseUrl = adminBaseUrl;
+        HttpClient.Builder builder = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(30));
+        if (configuration.isAuthorisation()) {
+            builder.authenticator(new GlassFishAuthenticator(
+                configuration.getAdminUser(), configuration.getAdminPassword()));
+        }
+        this.httpClient = builder.build();
     }
 
     public CommonGlassFishConfiguration getConfiguration() {
         return configuration;
+    }
+
+    /**
+     * Returns the pre-configured {@link HttpClient} for callers that need to build custom requests.
+     */
+    public HttpClient getHttpClient() {
+        return httpClient;
+    }
+
+    /**
+     * Returns the admin base URL for callers that need to build custom request URIs.
+     */
+    public String getAdminBaseUrl() {
+        return adminBaseUrl;
     }
 
     public Map<String, String> getAttributes(String additionalResourceUrl) {
@@ -104,104 +123,105 @@ public class GlassFishClientUtil {
     }
 
     /**
-     * Create a WebTarget for accessing a subpath under the admin endpoint that has authorization, logging
-     * and CSRF setup.
-     *
-     * @return WebTarget for admin base endpoint
-     */
-    public WebTarget prepareGET() {
-        ClientBuilder builder = ClientBuilder.newBuilder();
-        ClientConfig jerseyConfig = new ClientConfig();
-        if (configuration.isAuthorisation()) {
-            jerseyConfig.register(HttpAuthenticationFeature.basic(configuration.getAdminUser(), configuration.getAdminPassword()));
-        }
-        if (configuration.isDebugRequests()) {
-            jerseyConfig.register(new LoggingFeature(Logger.getLogger(LoggingFeature.DEFAULT_LOGGER_NAME),
-                                                     Level.INFO, LoggingFeature.Verbosity.PAYLOAD_ANY, 10000));
-        }
-        builder.withConfig(jerseyConfig);
-        builder.register(new CsrfProtectionFilter());
-        Client client = builder.build();
-        return client.target(this.adminBaseUrl);
-    }
-
-    /**
-     * Invoke a GET request against the adminSubPath
+     * Invoke a GET request against the adminSubPath.
      * @param adminSubPath - subpath of the admin command
      * @return map of the parsed XML response
      */
     public Map<String, Object> GETRequest(String adminSubPath) {
         try {
-            Invocation.Builder getBuilder = prepareClient(adminSubPath, false);
-            Response response = getBuilder.buildGet().invoke();
-            Map<String, Object> responseMap = getResponseMap(response);
-
-            return responseMap;
-        } catch (Exception e) {
-            throw new GlassFishClientException(e);
-        }
-    }
-
-    public List<Map<String,Object>> getInstancesList(String additionalResourceUrl) throws GlassFishClientException {
-        Map<String, Object> responseMap = GETRequest(additionalResourceUrl);
-        List<Map<String,Object>> instancesList = new ArrayList<>();
-
-        Map<String, Object> resultExtraProperties = (Map<String, Object>) responseMap.get("extraProperties");
-        if (resultExtraProperties != null) {
-            instancesList = (List<Map<String,Object>>) resultExtraProperties.get("instanceList");
-        }
-
-        return instancesList;
-    }
-
-    public Map<String, Object> POSTMultiPartRequest(String additionalResourceUrl, FormDataMultiPart form) {
-        try {
-            Response response = prepareClient(additionalResourceUrl, true)
-                .accept(MediaType.MULTIPART_FORM_DATA_TYPE)
-                .buildPost(Entity.entity(form, MediaType.MULTIPART_FORM_DATA))
-                .invoke();
-            Map<String, Object> responseMap = getResponseMap(response);
-
-        return responseMap;
+            HttpRequest request = newGetBuilder()
+                .uri(URI.create(adminBaseUrl + adminSubPath))
+                .GET()
+                .build();
+            HttpResponse<String> response = sendRequest(request);
+            return getResponseMap(response);
         } catch (Exception e) {
             throw new GlassFishClientException(e);
         }
     }
 
     /**
-     * Basic REST call preparation, with the additional resource url appended
+     * Invoke a GET request with path template resolution and query parameters.
      *
-     * @param additionalResourceUrl
-     *     url portion past the base to use
-     *
-     * @return the resource builder to execute
+     * @param pathTemplate a URI path template with {var} placeholders
+     * @param templateVars variables to resolve in the path template
+     * @param queryParams  query parameters to append (can be null or empty)
+     * @return map of the parsed XML response
      */
-    private Invocation.Builder prepareClient(String additionalResourceUrl, boolean multiPart) {
-        ClientBuilder builder = ClientBuilder.newBuilder();
-        ClientConfig jerseyConfig = new ClientConfig();
-        if (configuration.isAuthorisation()) {
-            jerseyConfig.register(HttpAuthenticationFeature.basic(configuration.getAdminUser(), configuration.getAdminPassword()));
+    public Map<String, Object> GETRequest(String pathTemplate, Map<String, String> templateVars,
+                                           Map<String, String> queryParams) {
+        String resolvedPath = resolveTemplates(pathTemplate, templateVars);
+        String fullPath = resolvedPath;
+        if (queryParams != null && !queryParams.isEmpty()) {
+            fullPath += "?" + buildQueryString(queryParams);
         }
-        if (multiPart) {
-            jerseyConfig.register(MultiPartFeature.class);
-        }
-        if (configuration.isDebugRequests()) {
-            jerseyConfig.register(new LoggingFeature(Logger.getLogger(LoggingFeature.DEFAULT_LOGGER_NAME),
-                                                     Level.INFO, LoggingFeature.Verbosity.PAYLOAD_ANY, 10000));
-        }
-        builder.withConfig(jerseyConfig);
-        builder.register(new CsrfProtectionFilter());
-        Client client = builder.build();
-        return client.target(this.adminBaseUrl)
-            .path(additionalResourceUrl)
-            .request(MediaType.APPLICATION_XML_TYPE)
-            .header(USER_AGENT, GlassFishClientService.USER_AGENT_VALUE);
+        return GETRequest(fullPath);
     }
 
-    Map<String, Object> getResponseMap(Response response) throws GlassFishClientException {
+    public List<Map<String, Object>> getInstancesList(String additionalResourceUrl) throws GlassFishClientException {
+        Map<String, Object> responseMap = GETRequest(additionalResourceUrl);
+        List<Map<String, Object>> instancesList = new ArrayList<>();
+
+        Map<String, Object> resultExtraProperties = (Map<String, Object>) responseMap.get("extraProperties");
+        if (resultExtraProperties != null) {
+            instancesList = (List<Map<String, Object>>) resultExtraProperties.get("instanceList");
+        }
+
+        return instancesList;
+    }
+
+    public Map<String, Object> POSTMultiPartRequest(String additionalResourceUrl, MultipartBody form) {
+        try {
+            HttpRequest request = newPostBuilder()
+                .uri(URI.create(adminBaseUrl + additionalResourceUrl))
+                .header("Content-Type", form.getContentType())
+                .POST(form.toBodyPublisher())
+                .build();
+            HttpResponse<String> response = sendRequest(request);
+            return getResponseMap(response);
+        } catch (Exception e) {
+            throw new GlassFishClientException(e);
+        }
+    }
+
+    /**
+     * Build a {@link HttpRequest.Builder} pre-configured with common headers for GET requests.
+     */
+    private HttpRequest.Builder newGetBuilder() {
+        return HttpRequest.newBuilder()
+            .header("Accept", "application/xml")
+            .header(CSRF_HEADER, CSRF_VALUE)
+            .header(USER_AGENT_HEADER, GlassFishClientService.USER_AGENT_VALUE);
+    }
+
+    /**
+     * Build a {@link HttpRequest.Builder} pre-configured with common headers for POST requests.
+     */
+    private HttpRequest.Builder newPostBuilder() {
+        return HttpRequest.newBuilder()
+            .header("Accept", "application/xml")
+            .header(CSRF_HEADER, CSRF_VALUE)
+            .header(USER_AGENT_HEADER, GlassFishClientService.USER_AGENT_VALUE);
+    }
+
+    private HttpResponse<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
+        if (configuration.isDebugRequests()) {
+            log.info("HTTP " + request.method() + " " + request.uri());
+            request.headers().map().forEach((name, values) ->
+                log.info("  " + name + ": " + String.join(", ", values)));
+        }
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (configuration.isDebugRequests()) {
+            log.info("HTTP response status: " + response.statusCode());
+            log.info("HTTP response body: " + response.body());
+        }
+        return response;
+    }
+
+    Map<String, Object> getResponseMap(HttpResponse<String> response) throws GlassFishClientException {
         Map<String, Object> responseMap = new HashMap<>();
         String message = "";
-        final String xmlDoc = response.readEntity(String.class);
+        final String xmlDoc = response.body();
 
         // Marshalling the XML format response to a java Map
         if (xmlDoc != null && !xmlDoc.isEmpty()) {
@@ -211,9 +231,9 @@ public class GlassFishClientUtil {
                 + ", message: " + responseMap.get("message");
         }
 
-        Response.StatusType status = response.getStatusInfo();
-        if (status.getFamily() == Response.Status.Family.SUCCESSFUL) {
-            // O.K. the jersey call was successful, what about the GlassFish server response?
+        int statusCode = response.statusCode();
+        if (statusCode >= 200 && statusCode < 300) {
+            // O.K. — the HTTP call was successful, what about the GlassFish server response?
             if (responseMap.get("exit_code") == null) {
                 throw new GlassFishClientException(message);
             } else if (WARNING.equals(responseMap.get("exit_code"))) {
@@ -223,12 +243,12 @@ public class GlassFishClientUtil {
                 // Response is not a warning nor success - it's surely a failure.
                 throw new GlassFishClientException(message);
             }
-        } else if (status.getReasonPhrase().contains("Not Found")) {
+        } else if (statusCode == 404) {
             // the REST resource can not be found (for optional resources it can be O.K.)
-            message += " [status: " + status.getFamily() + " reason: " + status.getReasonPhrase() + "]";
+            message += " [status: " + statusCode + "]";
             log.warning(message);
         } else {
-            message += " [status: " + status.getFamily() + " reason: " + status.getReasonPhrase() + "]";
+            message += " [status: " + statusCode + "]";
             log.severe(message);
             throw new GlassFishClientException(message);
         }
@@ -237,10 +257,9 @@ public class GlassFishClientUtil {
     }
 
     /**
-     * Marshalling a Glassfish Mng API response XML document to a java Map object
+     * Marshalling a Glassfish Mng API response XML document to a java Map object.
      *
      * @param document XML
-     *
      * @return map containing the XML doc representation in java map format
      */
     public Map<String, Object> xmlToMap(String document) {
@@ -371,5 +390,54 @@ public class GlassFishClientUtil {
             } // end if
         } // end while
         return list;
+    }
+
+    /**
+     * Resolve a URI path template with {var} placeholders.
+     */
+    static String resolveTemplates(String pathTemplate, Map<String, String> templateVars) {
+        String result = pathTemplate;
+        if (templateVars != null) {
+            for (var entry : templateVars.entrySet()) {
+                result = result.replace("{" + entry.getKey() + "}", entry.getValue());
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Build a URL-encoded query string from a map of parameters.
+     */
+    static String buildQueryString(Map<String, String> queryParams) {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (var entry : queryParams.entrySet()) {
+            if (!first) {
+                sb.append("&");
+            }
+            sb.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8));
+            sb.append("=");
+            sb.append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
+            first = false;
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Simple HTTP Basic authenticator for GlassFish admin API.
+     */
+    private static class GlassFishAuthenticator extends java.net.Authenticator {
+        private final String user;
+        private final String password;
+
+        GlassFishAuthenticator(String user, String password) {
+            this.user = user;
+            this.password = password;
+        }
+
+        @Override
+        protected java.net.PasswordAuthentication getPasswordAuthentication() {
+            return new java.net.PasswordAuthentication(user, password.toCharArray());
+        }
     }
 }
