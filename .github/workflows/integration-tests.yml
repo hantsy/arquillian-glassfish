@@ -1,20 +1,14 @@
 name: Integration Tests
 
 on:
-  push:
-    paths:
-      - "glassfish-*/**"
-      - "pom.xml"
-    branches:
-      - master
-  pull_request:
+  workflow_run:
+    workflows: ["Build"]
     types:
-      - opened
-      - synchronize
-      - reopened
+      - completed
 
 jobs:
   gf7-managed:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +22,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests --file pom.xml
 
   gf7-remote:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     services:
       glassfish:
@@ -54,6 +49,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests -Pglassfish-remote --file pom.xml
 
   gf8-managed:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,6 +63,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests -Pglassfish-managed,glassfish8 --file pom.xml
 
   gf8-remote:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     services:
       glassfish:

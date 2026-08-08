@@ -20,14 +20,20 @@
  */
 package org.jboss.arquillian.container.glassfish.clientutils;
 
+import static jakarta.ws.rs.core.HttpHeaders.USER_AGENT;
+
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.jboss.arquillian.container.glassfish.CommonGlassFishConfiguration;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.Servlet;
@@ -145,18 +151,19 @@ public class GlassFishClientService implements GlassFishClient {
                 "extraProperties");
             if (extraProperties != null) {
                 Object versionNumberObj = extraProperties.get("version-number");
-                if (versionNumberObj instanceof String version) {
-                    String[] parts = version.split("\\.");
-                    if (parts.length > 0) {
+                if (versionNumberObj instanceof String) {
+                    String version = (String) versionNumberObj;
+                    StringTokenizer tokenizer = new StringTokenizer(version, ".");
+                    if (tokenizer.hasMoreElements()) {
                         try {
-                            majorVersion = Integer.parseInt(parts[0]);
+                            majorVersion = Integer.parseInt(tokenizer.nextToken());
                         } catch (NumberFormatException ignore) {
                             log.info("Exception getting major version for: " + version);
                         }
                     }
-                    if (parts.length > 1) {
+                    if (tokenizer.hasMoreElements()) {
                         try {
-                            minorVersion = Integer.parseInt(parts[1]);
+                            minorVersion = Integer.parseInt(tokenizer.nextToken());
                         } catch (NumberFormatException ignore) {
                             log.info("Exception getting minor version for: " + version);
                         }
@@ -217,14 +224,19 @@ public class GlassFishClientService implements GlassFishClient {
      * @return subComponents - a map of SubComponents of the application
      */
     @Override
-    public HTTPContext doDeploy(String name, MultipartBody form) {
+    public HTTPContext doDeploy(String name, FormDataMultiPart form) {
         // Deploy the application on the GlassFish server
         getClientUtil().POSTMultiPartRequest(APPLICATION, form);
 
         // Fetch the list of SubComponents of the application
-        var subComponentsResponse = getClientUtil().GETRequest(
-            APPLICATION_RESOURCE + "/list-sub-components",
-            Map.of("name", name), null);
+        WebTarget listSubCompsGET = getClientUtil().prepareGET();
+        Response response = listSubCompsGET.path(APPLICATION_RESOURCE + "/list-sub-components")
+            .resolveTemplate("name", name)
+            .request(MediaType.APPLICATION_XML_TYPE)
+            .header(USER_AGENT, USER_AGENT_VALUE)
+            .get();
+
+        var subComponentsResponse = getClientUtil().getResponseMap(response);
         var subComponents = (Map<String, String>) subComponentsResponse.get("properties");
 
         // Build up the HTTPContext object using the nodeAddress information
@@ -260,7 +272,7 @@ public class GlassFishClientService implements GlassFishClient {
      * @return resultMap
      */
     @Override
-    public Map<String, Object> doUndeploy(String name, MultipartBody form) {
+    public Map<String, Object> doUndeploy(String name, FormDataMultiPart form) {
         String path = APPLICATION_RESOURCE.replace("{name}", name);
         return getClientUtil().POSTMultiPartRequest(path, form);
     }
@@ -367,14 +379,18 @@ public class GlassFishClientService implements GlassFishClient {
     private void resolveWebModuleSubComponents(String name, String module, String context,
         HTTPContext httpContext) {
         // Fetch the list of SubComponents of the application
-        Map<String, String> queryParams = new HashMap<>();
-        queryParams.put("appname", name);
-        queryParams.put("id", module);
-        queryParams.put("type", "servlets");
+        WebTarget listAppSubCompGET = getClientUtil().prepareGET();
+        Response response = listAppSubCompGET.path(
+                "/applications/application/{application}/list-sub-components")
+            .resolveTemplate("application", name)
+            .queryParam("appname", name)
+            .queryParam("id", module)
+            .queryParam("type", "servlets")
+            .request(MediaType.APPLICATION_XML_TYPE)
+            .header(USER_AGENT, USER_AGENT_VALUE)
+            .get();
 
-        Map<String, Object> subComponentsResponce = getClientUtil().GETRequest(
-            "/applications/application/{application}/list-sub-components",
-            Map.of("application", name), queryParams);
+        Map<String, Object> subComponentsResponce = getClientUtil().getResponseMap(response);
         Map<String, String> subComponents = (Map<String, String>) subComponentsResponce.get(
             "properties");
 
@@ -535,11 +551,16 @@ public class GlassFishClientService implements GlassFishClient {
      */
     private List<String> getVirtualServers(Map<String, String> attributes) {
         String config = attributes.get("configRef").replace("{target}", attributes.get("name"));
-        Map<String, Object> virtualServersResponse = getClientUtil().GETRequest(
-            VIRTUAL_SERVERS, Map.of("config", config), null);
-        List<Map<String, Object>> virtualServers = (List<Map<String, Object>>) virtualServersResponse.get("children");
-        List<String> virtualServerNames = new ArrayList<>();
-        for (Map<String, Object> virtualServer : virtualServers) {
+        WebTarget vsGET = getClientUtil().prepareGET();
+        Response response = vsGET.path(VIRTUAL_SERVERS)
+            .resolveTemplate("config", config)
+            .request(MediaType.APPLICATION_XML_TYPE)
+            .header(USER_AGENT, USER_AGENT_VALUE)
+            .get();
+        Map virtualServersResponse = getClientUtil().getResponseMap(response);
+        List<Map> virtualServers = (List<Map>) virtualServersResponse.get("children");
+        List<String> virtualServerNames = new ArrayList<String>();
+        for (Map virtualServer : virtualServers) {
             String virtualServerName = (String) virtualServer.get("message");
             if (!virtualServerName.equals("__asadmin")) {
                 virtualServerNames.add(virtualServerName);
@@ -850,7 +871,7 @@ public class GlassFishClientService implements GlassFishClient {
             String httpPortNum = getActiveHttpPort(clusterAttributes, networkListeners, false);
             String httpsPortNum = getActiveHttpPort(clusterAttributes, networkListeners, true);
 
-            for (Map.Entry<String, String> serverInstance : serverInstances.entrySet()) {
+            for (Map.Entry serverInstance : serverInstances.entrySet()) {
                 String serverName = serverInstance.getKey().toString();
 
                 serverAttributes = getServerAttributes(serverName);

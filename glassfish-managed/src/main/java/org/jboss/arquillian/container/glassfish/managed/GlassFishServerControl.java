@@ -24,6 +24,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,15 +38,18 @@ import static java.lang.Runtime.getRuntime;
  */
 class GlassFishServerControl {
 
-    private static final String DERBY_MISCONFIGURED_HINT = """
-        It seems that the Glassfish version you are running might have a problem starting embedded \
-        Derby database. Please take a look at the server logs. You can also switch off 'enableDerby' property in your 'arquillian.xml' if you don't need it. For \
-        more information please refer to relevant issues for existing workarounds: https://java.net/jira/browse/GLASSFISH-21004 \
-        https://issues.apache.org/jira/browse/DERBY-6438""";
+    private static final String DERBY_MISCONFIGURED_HINT =
+        "It seems that the Glassfish version you are running might have a problem starting embedded "
+            +
+            "Derby database. Please take a look at the server logs. You can also switch off 'enableDerby' property in your 'arquillian.xml' if you don't need it. For "
+            +
+            "more information please refer to relevant issues for existing workarounds: https://java.net/jira/browse/GLASSFISH-21004 "
+            +
+            "https://issues.apache.org/jira/browse/DERBY-6438";
 
 
     // see: https://github.com/eclipse-ee4j/glassfish/issues/25729
-    private static final List<String> NO_ARGS = List.of();
+    private static final List<String> NO_ARGS = Collections.emptyList();
 
     private static final Logger logger = Logger.getLogger(GlassFishServerControl.class.getName());
 
@@ -95,7 +99,7 @@ class GlassFishServerControl {
             return;
         }
         try {
-            executeAdminCommand("Starting database", "start-database", List.of(), NO_ARGS, createProcessOutputConsumer());
+            executeAdminCommand("Starting database", "start-database", Collections.emptyList(), NO_ARGS, createProcessOutputConsumer());
         } catch (LifecycleException e) {
             logger.warning(DERBY_MISCONFIGURED_HINT);
             throw e;
@@ -104,7 +108,7 @@ class GlassFishServerControl {
 
     private void stopDerbyDatabase() throws LifecycleException {
         if (config.isEnableDerby()) {
-            executeAdminCommand("Stopping database", "stop-database", List.of(),  NO_ARGS, createProcessOutputConsumer());
+            executeAdminCommand("Stopping database", "stop-database", Collections.emptyList(),  NO_ARGS, createProcessOutputConsumer());
         }
     }
 
@@ -116,13 +120,15 @@ class GlassFishServerControl {
     }
 
     private void registerShutdownHook() {
-        shutdownHook = new Thread(() -> {
-            logger.warning("Forcing container shutdown");
-            try {
-                stopContainer();
-                stopDerbyDatabase();
-            } catch (LifecycleException e) {
-                logger.log(Level.SEVERE, "Failed stopping services through shutdown hook.", e);
+        shutdownHook = new Thread(new Runnable() {
+            public void run() {
+                logger.warning("Forcing container shutdown");
+                try {
+                    stopContainer();
+                    stopDerbyDatabase();
+                } catch (LifecycleException e) {
+                    logger.log(Level.SEVERE, "Failed stopping services through shutdown hook.", e);
+                }
             }
         });
         getRuntime().addShutdownHook(shutdownHook);
@@ -134,7 +140,7 @@ class GlassFishServerControl {
             args.add(config.getDomain());
         }
 
-        executeAdminCommand(description, adminCmd, List.of(), args, consumer);
+        executeAdminCommand(description, adminCmd, Collections.emptyList(), args, consumer);
     }
 
     private void executeAdminCommand(String description, String command,  List<String> asadminArgs, List<String> args,

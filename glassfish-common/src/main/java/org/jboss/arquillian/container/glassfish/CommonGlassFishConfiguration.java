@@ -16,11 +16,10 @@
  */
 package org.jboss.arquillian.container.glassfish;
 
-import java.util.Objects;
-
 import org.jboss.arquillian.container.glassfish.clientutils.GlassFishClient;
 import org.jboss.arquillian.container.spi.ConfigurationException;
 import org.jboss.arquillian.container.spi.client.container.ContainerConfiguration;
+import org.jboss.arquillian.container.spi.client.deployment.Validate;
 
 /**
  * The common set of properties for a GLassFish container.
@@ -252,8 +251,8 @@ public class CommonGlassFishConfiguration implements ContainerConfiguration {
      */
     public void validate() throws ConfigurationException {
         if (isAuthorisation()) {
-            Objects.requireNonNull(getAdminUser(), "adminUser must be specified to use authorisation");
-            Objects.requireNonNull(getAdminPassword(), "adminPassword must be specified to use authorisation");
+            Validate.notNull(getAdminUser(), "adminUser must be specified to use authorisation");
+            Validate.notNull(getAdminPassword(), "adminPassword must be specified to use authorisation");
         }
     }
 }
