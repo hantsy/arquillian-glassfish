@@ -265,15 +265,14 @@ public class GlassFishClientUtil {
     public Map<String, Object> xmlToMap(String document) {
 
         if (document == null) {
-            return new HashMap<>();
+            return Map.of();
         }
 
-        InputStream input = null;
         Map<String, Object> map = null;
-        try {
+        try (InputStream input = new ByteArrayInputStream(
+                document.trim().getBytes(StandardCharsets.UTF_8))) {
             XMLInputFactory factory = XMLInputFactory.newInstance();
             factory.setProperty(XMLInputFactory.IS_VALIDATING, false);
-            input = new ByteArrayInputStream(document.trim().getBytes("UTF-8"));
             XMLStreamReader stream = factory.createXMLStreamReader(input);
             while (stream.hasNext()) {
                 int currentEvent = stream.next();
@@ -286,12 +285,6 @@ public class GlassFishClientUtil {
         } catch (Exception ex) {
             log.log(Level.SEVERE, null, ex);
             throw new RuntimeException(ex);
-        } finally {
-            try {
-                input.close();
-            } catch (IOException ex) {
-                log.log(Level.SEVERE, null, ex);
-            }
         }
 
         return map;
