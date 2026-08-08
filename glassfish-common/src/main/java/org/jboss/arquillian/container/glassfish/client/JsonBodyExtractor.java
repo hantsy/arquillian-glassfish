@@ -20,58 +20,45 @@ import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 
 import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Flow;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Extracts typed Java objects from JSON HTTP responses.
- * Validates HTTP status codes and GlassFish exit codes.
+ * An {@link HttpResponse.BodyHandler} that parses the JSON response body
+ * into a typed object and validates the GlassFish exit code for raw Map responses.
  */
-public class JsonBodyExtractor {
+public class JsonBodyExtractor<T> implements HttpResponse.BodyHandler<T> {
 
     private static final String SUCCESS = "SUCCESS";
     private static final String WARNING = "WARNING";
 
     private static final Logger log = Logger.getLogger(JsonBodyExtractor.class.getName());
 
-    private final Jsonb jsonb;
+    private final Class<T> type;
 
-    public JsonBodyExtractor() {
-        this.jsonb = JsonbBuilder.create();
+    public JsonBodyExtractor(Class<T> type) {
+        this.type = type;
     }
 
-    /**
-     * Extract and validate a typed object from an HTTP response.
-     */
-    public <T> T extract(HttpResponse<String> response, Class<T> type) {
-        String body = response.body();
-        T result = body != null && !body.isEmpty() ? fromJson(body, type) : null;
-
-        int statusCode = response.statusCode();
+    @Override
+    public HttpResponse.BodySubscriber<T> apply(HttpResponse.ResponseInfo responseInfo) {
+        int statusCode = responseInfo.statusCode();
         if (statusCode >= 200 && statusCode < 300) {
-            if (result instanceof Map<?, ?> m) {
-                validateExitCode(m);
-            }
-        } else if (statusCode == 404) {
+            return new JsonBodySubscriber<>(type);
+        }
+        if (statusCode == 404) {
             log.warning(" [status: " + statusCode + "]");
-        } else {
-            log.severe(" [status: " + statusCode + "]");
-            throw new GlassFishClientException("HTTP " + statusCode);
+            return HttpResponse.BodySubscribers.replacing(null);
         }
-
-        return result;
-    }
-
-    /**
-     * Parse a JSON string to a typed object.
-     */
-    public <T> T fromJson(String body, Class<T> type) {
-        try {
-            return jsonb.fromJson(body, type);
-        } catch (Exception e) {
-            throw new GlassFishClientException("Failed to parse JSON response: " + body, e);
-        }
+        log.severe(" [status: " + statusCode + "]");
+        throw new GlassFishClientException("HTTP " + statusCode);
     }
 
     /**
@@ -82,25 +69,74 @@ public class JsonBodyExtractor {
         return (Map<String, T>) responseMap.get("extraProperties");
     }
 
-    private void validateExitCode(Map<?, ?> map) {
-        Object exitCode = map.get("exit_code");
-        if (exitCode == null) {
-            throw new GlassFishClientException("");
-        }
-        if (WARNING.equals(exitCode)) {
-            log.warning("Deployment resulted in a warning: exit_code: "
-                + exitCode + ", message: " + map.get("message"));
-        } else if (!SUCCESS.equals(exitCode)) {
-            throw new GlassFishClientException("exit_code: "
-                + exitCode + ", message: " + map.get("message"));
-        }
-    }
+    // ── subscriber ───────────────────────────────────────────────────
 
-    public void close() {
-        try {
-            jsonb.close();
-        } catch (Exception e) {
-            log.log(Level.WARNING, "Failed to close JSONB instance", e);
+    private static class JsonBodySubscriber<T> implements HttpResponse.BodySubscriber<T> {
+
+        private final Class<T> type;
+        private final CompletableFuture<T> result = new CompletableFuture<>();
+        private final StringBuilder body = new StringBuilder();
+
+        JsonBodySubscriber(Class<T> type) {
+            this.type = type;
+        }
+
+        @Override
+        public CompletionStage<T> getBody() {
+            return result;
+        }
+
+        @Override
+        public void onSubscribe(Flow.Subscription subscription) {
+            subscription.request(Long.MAX_VALUE);
+        }
+
+        @Override
+        public void onNext(List<ByteBuffer> items) {
+            for (ByteBuffer item : items) {
+                body.append(StandardCharsets.UTF_8.decode(item));
+            }
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            result.completeExceptionally(throwable);
+        }
+
+        @Override
+        public void onComplete() {
+            try {
+                String bodyString = body.toString();
+                if (bodyString.isEmpty()) {
+                    result.complete(null);
+                    return;
+                }
+                try (Jsonb jsonb = JsonbBuilder.create()) {
+                    T parsed = jsonb.fromJson(bodyString, type);
+                    if (parsed instanceof Map<?, ?> m) {
+                        validateExitCode(m);
+                    }
+                    result.complete(parsed);
+                }
+            } catch (Exception e) {
+                result.completeExceptionally(
+                    new GlassFishClientException("Failed to parse JSON: " + body, e));
+            }
+        }
+
+        private void validateExitCode(Map<?, ?> map) {
+            Object exitCode = map.get("exit_code");
+            if (exitCode == null) {
+                result.completeExceptionally(new GlassFishClientException(""));
+                return;
+            }
+            if (WARNING.equals(exitCode)) {
+                log.warning("Deployment resulted in a warning: exit_code: "
+                    + exitCode + ", message: " + map.get("message"));
+            } else if (!SUCCESS.equals(exitCode)) {
+                result.completeExceptionally(new GlassFishClientException(
+                    "exit_code: " + exitCode + ", message: " + map.get("message")));
+            }
         }
     }
 }

@@ -58,7 +58,6 @@ public class GlassFishRestClient {
     private final GlassFishContainerConfiguration configuration;
     private final String adminBaseUrl;
     private final HttpClient httpClient;
-    private final JsonBodyExtractor bodyExtractor;
 
     // ── constructor ────────────────────────────────────────────────────────
 
@@ -72,7 +71,6 @@ public class GlassFishRestClient {
                 configuration.getAdminUser(), configuration.getAdminPassword()));
         }
         this.httpClient = builder.build();
-        this.bodyExtractor = new JsonBodyExtractor();
     }
 
     public GlassFishContainerConfiguration getConfiguration() {
@@ -127,7 +125,7 @@ public class GlassFishRestClient {
                 .uri(URI.create(adminBaseUrl + path))
                 .GET()
                 .build();
-            return parseResponse(sendRequest(request), type);
+            return send(request, type);
         } catch (IOException | InterruptedException e) {
             throw new GlassFishClientException(e);
         }
@@ -150,7 +148,7 @@ public class GlassFishRestClient {
                 .header("Content-Type", form.getContentType())
                 .POST(form)
                 .build();
-            return parseResponse(sendRequest(request), type);
+            return send(request, type);
         } catch (IOException | InterruptedException e) {
             throw new GlassFishClientException(e);
         }
@@ -297,22 +295,18 @@ public class GlassFishRestClient {
 
     // ── private methods ──────────────────────────────────────────────────
 
-    private <T> T parseResponse(HttpResponse<String> response, Class<T> type) {
-        return bodyExtractor.extract(response, type);
-    }
-
-    private HttpResponse<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
+    private <T> T send(HttpRequest request, Class<T> type) throws IOException, InterruptedException {
         if (configuration.isDebugRequests()) {
             log.info("HTTP " + request.method() + " " + request.uri());
             request.headers().map().forEach((name, values) ->
                 log.info("  " + name + ": " + String.join(", ", values)));
         }
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<T> response = httpClient.send(request, new JsonBodyExtractor<>(type));
         if (configuration.isDebugRequests()) {
             log.info("HTTP response status: " + response.statusCode());
             log.info("HTTP response body: " + response.body());
         }
-        return response;
+        return response.body();
     }
 
     private HttpRequest.Builder newGetBuilder() {
