@@ -26,3 +26,7 @@ jobs:
           cache: "maven"
       - name: Build with Maven (skip tests)
         run: ./mvnw -B install -DskipTests --file pom.xml
+
+  integration-tests:
+    needs: build
+    uses: ./.github/workflows/integration-tests.yml
