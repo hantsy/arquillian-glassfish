@@ -20,7 +20,6 @@
  */
 package org.jboss.arquillian.container.glassfish.clientutils;
 
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
 
@@ -31,42 +30,34 @@ public interface GlassFishClient {
     /**
      * Admin Server key for the REST request.
      */
-    public static final String ADMINSERVER = "server";
+    String ADMINSERVER = "server";
 
     /**
      * Start-up the server
-     * <p>
-     * -   Get the node addresses list associated with the target
-     * -   Check the status of the target server instance
-     * -   In case of cluster tries to fund an instance which has
-     * RUNNING status
-     *
-     * @return none
      */
-    public void startUp();
+    void startUp();
 
     /**
      * Do deploy an application defined by a multipart form's data
-     * to the target server or cluster of GlassFish 3.1
+     * to the target server or cluster of GlassFish.
      *
-     * @param name
-     *     - name of the appliacation
-     *     form		- a form of MediaType.MULTIPART_FORM_DATA_TYPE
-     *
+     * @param name - name of the application
+     * @param form - multipart form containing the deployment archive and fields
      * @return subComponents - a map of SubComponents of the application
      */
-    public HTTPContext doDeploy(String name, FormDataMultiPart form) throws DeploymentException;
+    HTTPContext doDeploy(String name, MultipartBody form) throws DeploymentException;
 
     /**
      * Do undeploy the application
      *
      * @param name - application name
+     * @param form - multipart form containing undeploy fields
      * @return responseMap
      */
-    public Map<String, Object> doUndeploy(String name, FormDataMultiPart form);
+    Map<String, Object> doUndeploy(String name, MultipartBody form);
 
     /**
      * Verify whether the Domain Administration Server is running.
      */
-    public boolean isDASRunning();
+    boolean isDASRunning();
 }
