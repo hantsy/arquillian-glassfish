@@ -292,19 +292,6 @@ public class GlassFishRestClient {
             + "/network-config/protocols/protocol/" + protocol);
     }
 
-    // ── static utilities ─────────────────────────────────────────────────
-
-    /** Resolve {@code {var}} placeholders in a URI path template. */
-    public static String resolveTemplates(String pathTemplate, Map<String, String> templateVars) {
-        String result = pathTemplate;
-        if (templateVars != null) {
-            for (var entry : templateVars.entrySet()) {
-                result = result.replace("{" + entry.getKey() + "}", entry.getValue());
-            }
-        }
-        return result;
-    }
-
     // ── private methods ──────────────────────────────────────────────────
 
     @SuppressWarnings("unchecked")
