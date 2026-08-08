@@ -18,7 +18,6 @@ package org.jboss.arquillian.container.glassfish;
 
 import java.util.Objects;
 
-import org.jboss.arquillian.container.glassfish.clientutils.GlassFishClient;
 import org.jboss.arquillian.container.spi.ConfigurationException;
 import org.jboss.arquillian.container.spi.client.container.ContainerConfiguration;
 
@@ -44,7 +43,7 @@ public class CommonGlassFishConfiguration implements ContainerConfiguration {
 
     private String adminPassword;
 
-    private String target = GlassFishClient.ADMINSERVER;
+    private String target = "server";
 
     private String libraries = null;
 

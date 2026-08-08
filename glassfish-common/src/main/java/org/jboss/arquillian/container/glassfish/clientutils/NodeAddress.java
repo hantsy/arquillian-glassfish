@@ -36,7 +36,7 @@ public class NodeAddress {
     /**
      * name of the server instance
      */
-    private String serverName = GlassFishClient.ADMINSERVER;
+    private String serverName = "server";
 
     /**
      * IP or HOST name of the node

@@ -22,7 +22,6 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 import org.jboss.arquillian.container.glassfish.CommonGlassFishConfiguration;
-import org.jboss.arquillian.container.glassfish.clientutils.GlassFishClient;
 import org.jboss.arquillian.container.spi.ConfigurationException;
 
 /**
@@ -125,7 +124,7 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
 
     @Override
     public String getTarget() {
-        return GlassFishClient.ADMINSERVER;
+        return "server";
     }
 
     /**
