@@ -356,40 +356,17 @@ public class GlassFishAdminClient {
      * @param none
      * @return map of standalone servers
      */
-    private static final String STANALONE_SERVER_INSTACES = "/servers/server";
-
     private Map<String, String> getServersList() {
-        Map<String, String> standaloneServers = restClient.getChildResources(
-            STANALONE_SERVER_INSTACES);
-        return standaloneServers;
+        return restClient.getServersList();
     }
-
-    /**
-     * Get the list of clusters
-     *
-     * @param none
-     * @return map of clusters
-     */
-    private static final String CLUSTERED_SERVER_INSTACES = "/clusters/cluster";
 
     private Map<String, String> getClustersList() {
-        Map<String, String> clusters = restClient.getChildResources(CLUSTERED_SERVER_INSTACES);
-        return clusters;
+        return restClient.getClustersList();
     }
 
-    /**
-     * Get the contextroot associated with the application
-     *
-     * @param name - application name
-     * @return contextRoot attribute of the application
-     */
     private String getApplicationContextRoot(String name) {
-        String path = APPLICATION_RESOURCE.replace("{name}", name);
-        Map<String, String> applicationAttributes = restClient.getAttributes(path);
-
-        // pull the contextRoot from the applicasion's attributes
-        String contextRoot = applicationAttributes.get("contextRoot").toString();
-        return contextRoot;
+        Map<String, String> applicationAttributes = restClient.getApplicationAttributes(name);
+        return applicationAttributes.get("contextRoot").toString();
     }
 
     private String resolveWebModuleContextRoot(String componentName,
@@ -445,94 +422,29 @@ public class GlassFishAdminClient {
     }
 
     // the REST resource path template to retrieve the list of server instances
-    private static final String MEMBER_SERVERS_RESOURCE = "/clusters/cluster/{target}/server-ref";
-
-    /**
-     * Get the list of server instances of the cluster
-     *
-     * @param target -
-     * @return server instances map
-     */
     protected Map<String, String> getServerInstances(String target) {
-        String path = MEMBER_SERVERS_RESOURCE.replace("{target}", target);
-        Map<String, String> serverInstances = restClient.getChildResources(path);
-        return serverInstances;
+        return restClient.getServerInstances(target);
     }
-
-    /**
-     * Get the serverAttributes map of a server
-     *
-     * @param name of the server
-     * @return serverAttributes map nodeRef:		- reference to the node object configRef:		- reference
-     * to the server's configuration object ...
-     */
-    // the REST resource path template for server attributes object
-    private static final String SERVER_RESOURCE = "/servers/server/{server}";
 
     protected Map<String, String> getServerAttributes(String server) {
-        String path = SERVER_RESOURCE.replace("{server}", server);
-        return restClient.getAttributes(path);
+        return restClient.getServerAttributes(server);
     }
-
-    /**
-     * Get the clusterAttributes map of a cluster
-     *
-     * @param name of the cluster
-     * @return serverAttributes map configRef:      - reference to the cluster's configuration
-     * object ...
-     */
-    // the REST resource path template for cluster attributes object
-    private static final String CLUSTER_RESOURCE = "/clusters/cluster/{cluster}";
 
     protected Map<String, String> getClusterAttributes(String cluster) {
-        String path = CLUSTER_RESOURCE.replace("{cluster}", cluster);
-        return restClient.getAttributes(path);
+        return restClient.getClusterAttributes(cluster);
     }
 
-    /**
-     * Get the HOST address (IP or name) of the node associated with the server
-     *
-     * @param node name
-     * @return nodeAttributes map
-     */
-    // the REST resource path template for the particular server object
-    private static final String NODE_RESOURCE = "/nodes/node/{node}";
-
     protected String getHostAddress(Map<String, String> serverAttributes) {
-        String path = NODE_RESOURCE.replace("{node}", serverAttributes.get("nodeRef"));
-        String nodeHost = restClient.getAttributes(path).get("nodeHost");
-
-        // If the host address returned by DAS was "localhost", it could be "localhost" in the context of DAS, but not Arquillian.
-        // This would result in Arquillian connecting to localhost, even though the DAS (and it's localhost) is on a separate machine.
-        // This is the case when the Glassfish installer or asadmin creates a localhost node with node-host set to "localhost" instead of a FQDN.
-        // Variants of "localhost" like "127.0.0.1" or ::1 are not addressed, as the installer/asadmin does not appear to set the node-host to such values.
-        // In such a scenario, the adminHost (DAS) known to Arquillian (from arquillian.xml) will be used as the nodeHost.
-        // All conditions are addressed:
-        // 1. If adminHost is "localhost", and the node-host registered in DAS is "localhost", then the node-host is set to "localhost". No harm done.
-        // 2. If adminHost is not "localhost", and the node-host registered in DAS is "localhost", then the node-host value will be set to the same as adminHost.
-        // Prevents Arquillian from connecting to a wrong address (localhost) to run the tests via ArquillianTestRunner.
-        // 3. If adminHost is "localhost" and the node-host registered in DAS is not "localhost", then the value from DAS will be used.
-        // 4. If adminHost is not "localhost" and the node-host registered in DAS is not "localhost", then the value from DAS will be used.
+        String nodeHost = restClient.getNodeHost(serverAttributes.get("nodeRef"));
         if (nodeHost.equals("localhost")) {
             nodeHost = configuration.getAdminHost();
         }
         return nodeHost;
     }
 
-    private static final String SYSTEM_PROPERTY = "/configs/config/{config}/system-property/{system-property}";
-
-    /**
-     * Get the port number defined as a system property in a configuration.
-     *
-     * @param attributes   The attributes which references the configuration (server or cluster
-     *                     configuration)
-     * @param propertyName The name of the system property to resolve
-     * @return The port number stored in the system property
-     */
     private int getSystemProperty(Map<String, String> attributes, String propertyName) {
-        String propertyPath = SYSTEM_PROPERTY.replace("{config}", attributes.get("configRef"));
-        Map<String, String> listener = restClient.getAttributes(
-            propertyPath.replace("{system-property}", propertyName));
+        Map<String, String> listener = restClient.getSystemProperty(
+            attributes.get("configRef"), propertyName);
         return Integer.parseInt(listener.get("value"));
     }
 
@@ -549,33 +461,14 @@ public class GlassFishAdminClient {
      * @return The port number stored in the system property
      */
     private int getServerSystemProperty(String server, String propertyName, int defaultValue) {
-        String listenerpath = SERVER_PROPERTY.replace("{server}", server);
-        Map<String, String> listener = restClient.getAttributes(
-            listenerpath.replace("{system-property}", propertyName));
-
+        Map<String, String> listener = restClient.getServerSystemProperty(server, propertyName);
         return (listener.get("value") != null) ? Integer.parseInt(listener.get("value"))
             : defaultValue;
     }
 
-    /**
-     * Get the http/https port number of the server instance
-     * <p>
-     * The attribute is optional, It is generated by the Glassfish server if we have more then one
-     * server instance on the same node.
-     *
-     * @param server name secure: false - http port number, true - https port number
-     * @return http/https port number. If the attribute is not defined, gives back the default port
-     */
-    // the REST resource path template for the Servers instance http-listener object
-    private static final String HTTP_LISTENER_INS = "/servers/server/{server}/system-property/{http-listener}";
-
     protected int getServerInstanceHttpPort(String server, int default_port, boolean secure) {
-        String listenerpath = HTTP_LISTENER_INS.replace("{server}", server);
-        String httpListener = (!secure) ? "HTTP_LISTENER_PORT" : "HTTP_SSL_LISTENER_PORT";
-
-        Map<String, String> listener = restClient.getAttributes(
-            listenerpath.replace("{http-listener}", httpListener));
-
+        String propertyName = (!secure) ? "HTTP_LISTENER_PORT" : "HTTP_SSL_LISTENER_PORT";
+        Map<String, String> listener = restClient.getServerInstanceHttpPort(server, propertyName);
         return (listener.get("value") != null) ? Integer.parseInt(listener.get("value"))
             : default_port;
     }
@@ -610,93 +503,44 @@ public class GlassFishAdminClient {
         return virtualServerNames;
     }
 
-    private static final String VIRTUAL_SERVER = "/configs/config/{config}/http-service/virtual-server/{virtualServer}";
-
-    /**
-     * Obtains the list of all network listeners associated with the list of provided virtual
-     * servers.
-     *
-     * @param attributes     The attributes which references the configuration (server or cluster
-     *                       configuration)
-     * @param virtualServers The {@link List} of all virtual servers whose the listeners must be
-     *                       retrieved
-     * @return The list of all listener names associated with the provided list of virtual servers
-     */
     private List<String> getNetworkListeners(Map<String, String> attributes,
                                              List<String> virtualServers) {
-        List<String> networkListeners = new ArrayList<String>();
-        Properties properties = new Properties();
-
+        List<String> networkListeners = new ArrayList<>();
+        String configRef = attributes.get("configRef");
         for (String virtualServer : virtualServers) {
-            String virtualServerPath = VIRTUAL_SERVER
-                .replace("{config}", attributes.get("configRef"))
-                .replace("{virtualServer}", virtualServer);
-            Map<String, String> virtualServerAttributes = restClient.getAttributes(
-                virtualServerPath);
+            Map<String, String> virtualServerAttributes =
+                restClient.getVirtualServerAttributes(configRef, virtualServer);
             String listenerList = virtualServerAttributes.get("networkListeners");
-            String[] listeners = listenerList.split(",");
-            for (String listener : listeners) {
+            for (String listener : listenerList.split(",")) {
                 networkListeners.add(listener.trim());
             }
         }
         return networkListeners;
     }
 
-    private static final String LISTENER =
-        "/configs/config/{config}/network-config/network-listeners/network-listener/{listener}";
-
-    /**
-     * Obtains the value of a HTTP/HTTPS network listener, as stored in the GlassFish
-     * configuration.
-     *
-     * @param attributes       The attributes which references the configuration (server or cluster
-     *                         configuration)
-     * @param networkListeners The {@link List} of network listeners among which one will be chosen
-     * @param secure           Should a listener with a secure protocol be chosen?
-     * @return The value of the port number stored in the chosen listener configuration. This may be
-     * parseable as a number, but not necessarily so. Sometimes a system property might be
-     * returned.
-     */
     private String getActiveHttpPort(Map<String, String> attributes, List<String> networkListeners,
                                      boolean secure) {
+        String configRef = attributes.get("configRef");
         for (String networkListener : networkListeners) {
-            String listenerPath = LISTENER.replace("{config}", attributes.get("configRef"))
-                .replace("{listener}",
-                    networkListener);
-            Map<String, String> listenerAttributes = restClient.getAttributes(listenerPath);
+            Map<String, String> listenerAttributes =
+                restClient.getListenerAttributes(configRef, networkListener);
             boolean enabled = Boolean.parseBoolean(listenerAttributes.get("enabled"));
             if (!enabled) {
                 continue;
             }
-            String port = listenerAttributes.get("port");
             String protocolName = listenerAttributes.get("protocol");
-            boolean secureProtocol = isSecureProtocol(attributes, protocolName);
-            if (secure && secureProtocol) {
-                return port;
-            } else if (!secure && !secureProtocol) {
-                return port;
+            boolean secureProtocol = isSecureProtocol(configRef, protocolName);
+            if (secure == secureProtocol) {
+                return listenerAttributes.get("port");
             }
         }
         return null;
     }
 
-    private static final String PROTOCOL = "/configs/config/{config}/network-config/protocols/protocol/{protocol}";
-
-    /**
-     * Determines whether the protocol associated with the listener is a secure protocol or not.
-     *
-     * @param attributes   The attributes which references the configuration (server or cluster
-     *                     configuration)
-     * @param protocolName The name of the protocol
-     * @return A boolean value indicating whether a protocol is secure or not
-     */
-    private boolean isSecureProtocol(Map<String, String> attributes, String protocolName) {
-        String protocolPath = PROTOCOL.replace("{config}", attributes.get("configRef"))
-            .replace("{protocol}",
-                protocolName);
-        Map<String, String> protocolAttributes = restClient.getAttributes(protocolPath);
-        boolean isSecure = Boolean.parseBoolean(protocolAttributes.get("securityEnabled"));
-        return isSecure;
+    private boolean isSecureProtocol(String configRef, String protocolName) {
+        Map<String, String> protocolAttributes =
+            restClient.getProtocolAttributes(configRef, protocolName);
+        return Boolean.parseBoolean(protocolAttributes.get("securityEnabled"));
     }
 
     private static final String SYSTEM_PROPERTY_REGEX = "\\$\\{(.*)\\}";

@@ -254,6 +254,66 @@ public class GlassFishRestClient {
         return instancesList;
     }
 
+    // ── resource-level accessors ──────────────────────────────────────────
+
+    public Map<String, String> getServersList() {
+        return getChildResources("/servers/server");
+    }
+
+    public Map<String, String> getClustersList() {
+        return getChildResources("/clusters/cluster");
+    }
+
+    public Map<String, String> getApplicationAttributes(String name) {
+        return getAttributes("/applications/application/" + name);
+    }
+
+    public Map<String, String> getServerInstances(String target) {
+        return getChildResources("/clusters/cluster/" + target + "/server-ref");
+    }
+
+    public Map<String, String> getServerAttributes(String server) {
+        return getAttributes("/servers/server/" + server);
+    }
+
+    public Map<String, String> getClusterAttributes(String cluster) {
+        return getAttributes("/clusters/cluster/" + cluster);
+    }
+
+    public String getNodeHost(String nodeRef) {
+        return getAttributes("/nodes/node/" + nodeRef).get("nodeHost");
+    }
+
+    public Map<String, String> getSystemProperty(String configRef, String propertyName) {
+        return getAttributes("/configs/config/" + configRef
+            + "/system-property/" + propertyName);
+    }
+
+    public Map<String, String> getServerSystemProperty(String server, String propertyName) {
+        return getAttributes("/servers/server/" + server
+            + "/system-property/" + propertyName);
+    }
+
+    public Map<String, String> getServerInstanceHttpPort(String server, String propertyName) {
+        return getAttributes("/servers/server/" + server
+            + "/system-property/" + propertyName);
+    }
+
+    public Map<String, String> getVirtualServerAttributes(String configRef, String virtualServer) {
+        return getAttributes("/configs/config/" + configRef
+            + "/http-service/virtual-server/" + virtualServer);
+    }
+
+    public Map<String, String> getListenerAttributes(String configRef, String listener) {
+        return getAttributes("/configs/config/" + configRef
+            + "/network-config/network-listeners/network-listener/" + listener);
+    }
+
+    public Map<String, String> getProtocolAttributes(String configRef, String protocol) {
+        return getAttributes("/configs/config/" + configRef
+            + "/network-config/protocols/protocol/" + protocol);
+    }
+
     // ── JSONB parsing ────────────────────────────────────────────────────
 
     /**
