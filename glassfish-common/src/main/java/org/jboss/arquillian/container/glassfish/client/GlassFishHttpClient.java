@@ -53,9 +53,9 @@ public class GlassFishHttpClient {
     private static final String USER_AGENT_HEADER = "User-Agent";
     public static final String USER_AGENT_VALUE = "arquillian-glassfish-managed-jakarta";
 
-    private CommonGlassFishConfiguration configuration;
-    private String adminBaseUrl;
-    private HttpClient httpClient;
+    private final CommonGlassFishConfiguration configuration;
+    private final String adminBaseUrl;
+    private final HttpClient httpClient;
 
     private static final Logger log = Logger.getLogger(GlassFishHttpClient.class.getName());
 
@@ -123,12 +123,9 @@ public class GlassFishHttpClient {
             executeGet("", Map.class);
             return true;
         } catch (GlassFishClientException e) {
-            if (e.getCause() != null
-                && e.getCause().getMessage() != null
-                && e.getCause().getMessage().contains("ConnectException")) {
-                return false;
-            }
-            return true;
+            return e.getCause() == null
+                || e.getCause().getMessage() == null
+                || !e.getCause().getMessage().contains("ConnectException");
         }
     }
 

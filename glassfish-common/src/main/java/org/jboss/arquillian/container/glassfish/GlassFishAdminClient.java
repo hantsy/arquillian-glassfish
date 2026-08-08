@@ -296,7 +296,7 @@ public class GlassFishAdminClient {
         // Fetch the list of SubComponents of the application
         DeploymentResponse subComponentsResponse = getClientUtil()
             .listSubComponents(name, null);
-        var subComponents = subComponentsResponse.properties;
+        var subComponents = subComponentsResponse.properties();
 
         // Build up the HTTPContext object using the nodeAddress information
         int port = nodeAddress.httpPort();
@@ -312,7 +312,7 @@ public class GlassFishAdminClient {
                 if (WEBMODULE.equals(subComponent.getValue())) {
 
                     @SuppressWarnings("unchecked")
-                    var children = (List<Map<String, Map<String, String>>>) (Object) subComponentsResponse.children;
+                    var children = (List<Map<String, Map<String, String>>>) (Object) subComponentsResponse.children();
                     // Override the application contextRoot by the webmodul's contextRoot
                     contextRoot = resolveWebModuleContextRoot(componentName, children);
                     resolveWebModuleSubComponents(name, componentName, contextRoot, httpContext);
@@ -435,7 +435,7 @@ public class GlassFishAdminClient {
 
         DeploymentResponse subComponentsResponse = getClientUtil()
             .listSubComponents(name, queryParams);
-        Map<String, String> subComponents = subComponentsResponse.properties;
+        Map<String, String> subComponents = subComponentsResponse.properties();
 
         String componentName;
         for (Map.Entry<String, String> subComponent : subComponents.entrySet()) {
@@ -599,7 +599,7 @@ public class GlassFishAdminClient {
             Map.of("config", config));
         DeploymentResponse virtualServersResponse = getClientUtil()
             .executeGet(resolvedPath, DeploymentResponse.class);
-        List<Map<String, Object>> virtualServers = virtualServersResponse.children;
+        List<Map<String, Object>> virtualServers = virtualServersResponse.children();
         List<String> virtualServerNames = new ArrayList<>();
         for (Map<String, Object> virtualServer : virtualServers) {
             String virtualServerName = (String) virtualServer.get("message");

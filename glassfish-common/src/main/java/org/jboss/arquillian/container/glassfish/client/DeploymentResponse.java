@@ -16,18 +16,18 @@
  */
 package org.jboss.arquillian.container.glassfish.client;
 
+import jakarta.json.bind.annotation.JsonbProperty;
+
 import java.util.List;
 import java.util.Map;
 
 /**
  * Typed response from GlassFish REST deploy/undeploy/list-sub-components endpoints.
- * Uses Jakarta JSONB for deserialization from JSON.
  */
-public class DeploymentResponse {
-
-    public String message;
-    public String exit_code;
-    public Map<String, Object> extraProperties;
-    public List<Map<String, Object>> children;
-    public Map<String, String> properties;
+public record DeploymentResponse(
+    String message,
+    @JsonbProperty("exit_code") String exitCode,
+    Map<String, Object> extraProperties,
+    List<Map<String, Object>> children,
+    Map<String, String> properties) {
 }
