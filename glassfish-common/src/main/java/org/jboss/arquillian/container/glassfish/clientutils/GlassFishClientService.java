@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -151,19 +150,18 @@ public class GlassFishClientService implements GlassFishClient {
                 "extraProperties");
             if (extraProperties != null) {
                 Object versionNumberObj = extraProperties.get("version-number");
-                if (versionNumberObj instanceof String) {
-                    String version = (String) versionNumberObj;
-                    StringTokenizer tokenizer = new StringTokenizer(version, ".");
-                    if (tokenizer.hasMoreElements()) {
+                if (versionNumberObj instanceof String version) {
+                    String[] parts = version.split("\\.");
+                    if (parts.length > 0) {
                         try {
-                            majorVersion = Integer.parseInt(tokenizer.nextToken());
+                            majorVersion = Integer.parseInt(parts[0]);
                         } catch (NumberFormatException ignore) {
                             log.info("Exception getting major version for: " + version);
                         }
                     }
-                    if (tokenizer.hasMoreElements()) {
+                    if (parts.length > 1) {
                         try {
-                            minorVersion = Integer.parseInt(tokenizer.nextToken());
+                            minorVersion = Integer.parseInt(parts[1]);
                         } catch (NumberFormatException ignore) {
                             log.info("Exception getting minor version for: " + version);
                         }
@@ -557,10 +555,10 @@ public class GlassFishClientService implements GlassFishClient {
             .request(MediaType.APPLICATION_XML_TYPE)
             .header(USER_AGENT, USER_AGENT_VALUE)
             .get();
-        Map virtualServersResponse = getClientUtil().getResponseMap(response);
-        List<Map> virtualServers = (List<Map>) virtualServersResponse.get("children");
-        List<String> virtualServerNames = new ArrayList<String>();
-        for (Map virtualServer : virtualServers) {
+        Map<String, Object> virtualServersResponse = getClientUtil().getResponseMap(response);
+        List<Map<String, Object>> virtualServers = (List<Map<String, Object>>) virtualServersResponse.get("children");
+        List<String> virtualServerNames = new ArrayList<>();
+        for (Map<String, Object> virtualServer : virtualServers) {
             String virtualServerName = (String) virtualServer.get("message");
             if (!virtualServerName.equals("__asadmin")) {
                 virtualServerNames.add(virtualServerName);
@@ -871,7 +869,7 @@ public class GlassFishClientService implements GlassFishClient {
             String httpPortNum = getActiveHttpPort(clusterAttributes, networkListeners, false);
             String httpsPortNum = getActiveHttpPort(clusterAttributes, networkListeners, true);
 
-            for (Map.Entry serverInstance : serverInstances.entrySet()) {
+            for (Map.Entry<String, String> serverInstance : serverInstances.entrySet()) {
                 String serverName = serverInstance.getKey().toString();
 
                 serverAttributes = getServerAttributes(serverName);

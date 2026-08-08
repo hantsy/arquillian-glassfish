@@ -81,7 +81,7 @@ public class GlassFishClientUtil {
 
     public Map<String, String> getAttributes(String additionalResourceUrl) {
         Map<String, Object> responseMap = GETRequest(additionalResourceUrl);
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
 
         Map<String, Map<String, String>> resultExtraProperties = (Map<String, Map<String, String>>) responseMap.get("extraProperties");
         if (resultExtraProperties != null) {
@@ -93,7 +93,7 @@ public class GlassFishClientUtil {
 
     public Map<String, String> getChildResources(String additionalResourceUrl) throws GlassFishClientException {
         Map<String, Object> responseMap = GETRequest(additionalResourceUrl);
-        Map<String, String> childResources = new HashMap<String, String>();
+        Map<String, String> childResources = new HashMap<>();
 
         Map<String, Object> resultExtraProperties = (Map<String, Object>) responseMap.get("extraProperties");
         if (resultExtraProperties != null) {
@@ -144,7 +144,7 @@ public class GlassFishClientUtil {
 
     public List<Map<String,Object>> getInstancesList(String additionalResourceUrl) throws GlassFishClientException {
         Map<String, Object> responseMap = GETRequest(additionalResourceUrl);
-        List<Map<String,Object>> instancesList = new ArrayList<Map<String,Object>>();
+        List<Map<String,Object>> instancesList = new ArrayList<>();
 
         Map<String, Object> resultExtraProperties = (Map<String, Object>) responseMap.get("extraProperties");
         if (resultExtraProperties != null) {
@@ -281,7 +281,7 @@ public class GlassFishClientUtil {
     private Map<String, Object> resolveXmlMap(XMLStreamReader stream) throws XMLStreamException {
 
         boolean endMapFlag = false;
-        Map<String, Object> entry = new HashMap<String, Object>();
+        Map<String, Object> entry = new HashMap<>();
         String key = null;
         String elementName = null;
 
@@ -298,10 +298,10 @@ public class GlassFishClientUtil {
                         key = null;
                     }
                 } else if ("map".equals(stream.getLocalName())) {
-                    Map value = resolveXmlMap(stream);
+                    Map<String, Object> value = resolveXmlMap(stream);
                     entry.put(key, value);
                 } else if ("list".equals(stream.getLocalName())) {
-                    List value = resolveXmlList(stream);
+                    List<Object> value = resolveXmlList(stream);
                     entry.put(key, value);
                 } else {
                     elementName = stream.getLocalName();
@@ -332,10 +332,10 @@ public class GlassFishClientUtil {
         return entry;
     }
 
-    private List resolveXmlList(XMLStreamReader stream) throws XMLStreamException {
+    private List<Object> resolveXmlList(XMLStreamReader stream) throws XMLStreamException {
 
         boolean endListFlag = false;
-        List list = new ArrayList();
+        List<Object> list = new ArrayList<>();
         String elementName = null;
 
         while (!endListFlag) {
