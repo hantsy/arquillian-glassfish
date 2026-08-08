@@ -166,7 +166,7 @@ public class GlassFishAdminClient {
     private static final String GLASSFISH_VERSION = "/version";
 
     private void setGlassFishVersion() {
-        GlassFishResponse versionResponse = getRestClient().getVersion();
+        GlassFishResponse versionResponse = restClient.getVersion();
         if (versionResponse != null && versionResponse.extraProperties() != null) {
             Object versionNumberObj = versionResponse.extraProperties().get("version-number");
             if (versionNumberObj instanceof String version) {
@@ -202,7 +202,7 @@ public class GlassFishAdminClient {
      * @return nodeAddress - if any has RUNNING status
      */
     private NodeAddress runningInstanceFilter(List<NodeAddress> nodeAddressList) {
-        var instanceList = getRestClient().getInstancesList(INSTANCE_LIST);
+        var instanceList = restClient.getInstancesList(INSTANCE_LIST);
 
         String instanceStatus = null;
         for (var instance : instanceList) {
@@ -291,10 +291,10 @@ public class GlassFishAdminClient {
      */
     private HTTPContext doDeploy(String name, MultipartBodyPublisher form) {
         // Deploy the application on the GlassFish server
-        getRestClient().deployApplication(form);
+        restClient.deployApplication(form);
 
         // Fetch the list of SubComponents of the application
-        GlassFishResponse subComponentsResponse = getRestClient()
+        GlassFishResponse subComponentsResponse = restClient
             .listSubComponents(name, null);
         var subComponents = (Map<String, String>) subComponentsResponse.extraProperties().get("properties");
 
@@ -332,14 +332,14 @@ public class GlassFishAdminClient {
      * @return resultMap
      */
     private void doUndeploy(String name, MultipartBodyPublisher form) {
-        getRestClient().undeployApplication(name, form);
+        restClient.undeployApplication(name, form);
     }
 
     /**
      * Verify if the DAS is running or not.
      */
     public boolean isDASRunning() {
-        return getRestClient().isDASRunning();
+        return restClient.isDASRunning();
     }
 
     public int getMajorVersion() {
@@ -359,7 +359,7 @@ public class GlassFishAdminClient {
     private static final String STANALONE_SERVER_INSTACES = "/servers/server";
 
     private Map<String, String> getServersList() {
-        Map<String, String> standaloneServers = getRestClient().getChildResources(
+        Map<String, String> standaloneServers = restClient.getChildResources(
             STANALONE_SERVER_INSTACES);
         return standaloneServers;
     }
@@ -373,7 +373,7 @@ public class GlassFishAdminClient {
     private static final String CLUSTERED_SERVER_INSTACES = "/clusters/cluster";
 
     private Map<String, String> getClustersList() {
-        Map<String, String> clusters = getRestClient().getChildResources(CLUSTERED_SERVER_INSTACES);
+        Map<String, String> clusters = restClient.getChildResources(CLUSTERED_SERVER_INSTACES);
         return clusters;
     }
 
@@ -385,7 +385,7 @@ public class GlassFishAdminClient {
      */
     private String getApplicationContextRoot(String name) {
         String path = APPLICATION_RESOURCE.replace("{name}", name);
-        Map<String, String> applicationAttributes = getRestClient().getAttributes(path);
+        Map<String, String> applicationAttributes = restClient.getAttributes(path);
 
         // pull the contextRoot from the applicasion's attributes
         String contextRoot = applicationAttributes.get("contextRoot").toString();
@@ -433,7 +433,7 @@ public class GlassFishAdminClient {
             "id", module,
             "type", "servlets");
 
-        GlassFishResponse subComponentsResponse = getRestClient()
+        GlassFishResponse subComponentsResponse = restClient
             .listSubComponents(name, queryParams);
         Map<String, String> subComponents = (Map<String, String>) subComponentsResponse.extraProperties().get("properties");
 
@@ -455,7 +455,7 @@ public class GlassFishAdminClient {
      */
     protected Map<String, String> getServerInstances(String target) {
         String path = MEMBER_SERVERS_RESOURCE.replace("{target}", target);
-        Map<String, String> serverInstances = getRestClient().getChildResources(path);
+        Map<String, String> serverInstances = restClient.getChildResources(path);
         return serverInstances;
     }
 
@@ -471,7 +471,7 @@ public class GlassFishAdminClient {
 
     protected Map<String, String> getServerAttributes(String server) {
         String path = SERVER_RESOURCE.replace("{server}", server);
-        return getRestClient().getAttributes(path);
+        return restClient.getAttributes(path);
     }
 
     /**
@@ -486,7 +486,7 @@ public class GlassFishAdminClient {
 
     protected Map<String, String> getClusterAttributes(String cluster) {
         String path = CLUSTER_RESOURCE.replace("{cluster}", cluster);
-        return getRestClient().getAttributes(path);
+        return restClient.getAttributes(path);
     }
 
     /**
@@ -500,7 +500,7 @@ public class GlassFishAdminClient {
 
     protected String getHostAddress(Map<String, String> serverAttributes) {
         String path = NODE_RESOURCE.replace("{node}", serverAttributes.get("nodeRef"));
-        String nodeHost = getRestClient().getAttributes(path).get("nodeHost");
+        String nodeHost = restClient.getAttributes(path).get("nodeHost");
 
         // If the host address returned by DAS was "localhost", it could be "localhost" in the context of DAS, but not Arquillian.
         // This would result in Arquillian connecting to localhost, even though the DAS (and it's localhost) is on a separate machine.
@@ -531,7 +531,7 @@ public class GlassFishAdminClient {
      */
     private int getSystemProperty(Map<String, String> attributes, String propertyName) {
         String propertyPath = SYSTEM_PROPERTY.replace("{config}", attributes.get("configRef"));
-        Map<String, String> listener = getRestClient().getAttributes(
+        Map<String, String> listener = restClient.getAttributes(
             propertyPath.replace("{system-property}", propertyName));
         return Integer.parseInt(listener.get("value"));
     }
@@ -550,7 +550,7 @@ public class GlassFishAdminClient {
      */
     private int getServerSystemProperty(String server, String propertyName, int defaultValue) {
         String listenerpath = SERVER_PROPERTY.replace("{server}", server);
-        Map<String, String> listener = getRestClient().getAttributes(
+        Map<String, String> listener = restClient.getAttributes(
             listenerpath.replace("{system-property}", propertyName));
 
         return (listener.get("value") != null) ? Integer.parseInt(listener.get("value"))
@@ -573,7 +573,7 @@ public class GlassFishAdminClient {
         String listenerpath = HTTP_LISTENER_INS.replace("{server}", server);
         String httpListener = (!secure) ? "HTTP_LISTENER_PORT" : "HTTP_SSL_LISTENER_PORT";
 
-        Map<String, String> listener = getRestClient().getAttributes(
+        Map<String, String> listener = restClient.getAttributes(
             listenerpath.replace("{http-listener}", httpListener));
 
         return (listener.get("value") != null) ? Integer.parseInt(listener.get("value"))
@@ -597,7 +597,7 @@ public class GlassFishAdminClient {
             .replace("{target}", attributes.get("name"));
         String resolvedPath = GlassFishRestClient.resolveTemplates(VIRTUAL_SERVERS,
             Map.of("config", config));
-        GlassFishResponse virtualServersResponse = getRestClient()
+        GlassFishResponse virtualServersResponse = restClient
             .executeGet(resolvedPath, GlassFishResponse.class);
         List<Map<String, Object>> virtualServers = (List<Map<String, Object>>) virtualServersResponse.extraProperties().get("children");
         List<String> virtualServerNames = new ArrayList<>();
@@ -631,7 +631,7 @@ public class GlassFishAdminClient {
             String virtualServerPath = VIRTUAL_SERVER
                 .replace("{config}", attributes.get("configRef"))
                 .replace("{virtualServer}", virtualServer);
-            Map<String, String> virtualServerAttributes = getRestClient().getAttributes(
+            Map<String, String> virtualServerAttributes = restClient.getAttributes(
                 virtualServerPath);
             String listenerList = virtualServerAttributes.get("networkListeners");
             String[] listeners = listenerList.split(",");
@@ -663,7 +663,7 @@ public class GlassFishAdminClient {
             String listenerPath = LISTENER.replace("{config}", attributes.get("configRef"))
                 .replace("{listener}",
                     networkListener);
-            Map<String, String> listenerAttributes = getRestClient().getAttributes(listenerPath);
+            Map<String, String> listenerAttributes = restClient.getAttributes(listenerPath);
             boolean enabled = Boolean.parseBoolean(listenerAttributes.get("enabled"));
             if (!enabled) {
                 continue;
@@ -694,7 +694,7 @@ public class GlassFishAdminClient {
         String protocolPath = PROTOCOL.replace("{config}", attributes.get("configRef"))
             .replace("{protocol}",
                 protocolName);
-        Map<String, String> protocolAttributes = getRestClient().getAttributes(protocolPath);
+        Map<String, String> protocolAttributes = restClient.getAttributes(protocolPath);
         boolean isSecure = Boolean.parseBoolean(protocolAttributes.get("securityEnabled"));
         return isSecure;
     }
@@ -741,10 +741,6 @@ public class GlassFishAdminClient {
 
     private void setTarget(String target) {
         this.target = target;
-    }
-
-    private GlassFishRestClient getRestClient() {
-        return restClient;
     }
 
     /**
