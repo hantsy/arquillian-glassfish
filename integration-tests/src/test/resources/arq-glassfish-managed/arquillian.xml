@@ -11,7 +11,7 @@
 
   <container qualifier="glassfish-managed" default="true">
     <configuration>
-      <property name="glassFishHome">target/${glassfish.home}</property>
+      <property name="glassFishHome">${glassfish.home}</property>
       <property name="adminHost">localhost</property>
       <property name="adminPort">4848</property>
       <property name="debug">true</property>

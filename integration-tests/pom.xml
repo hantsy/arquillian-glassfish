@@ -13,7 +13,7 @@
 
   <properties>
     <glassfish.version>7.0.14</glassfish.version>
-    <glassfish.home>glassfish7</glassfish.home>
+    <glassfish.home>${project.build.directory}/glassfish7</glassfish.home>
   </properties>
 
   <dependencies>
@@ -89,30 +89,15 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <build>
+        <testResources>
+          <testResource>
+            <directory>src/test/resources</directory>
+          </testResource>
+          <testResource>
+            <directory>src/test/resources/arq-glassfish-managed</directory>
+          </testResource>
+        </testResources>
         <plugins>
-          <!-- Add managed arquillian.xml to test classpath -->
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <version>${build-helper-maven-plugin.version}</version>
-            <executions>
-              <execution>
-                <id>add-managed-test-resource</id>
-                <phase>generate-test-resources</phase>
-                <goals>
-                  <goal>add-test-resource</goal>
-                </goals>
-                <configuration>
-                  <resources>
-                    <resource>
-                      <directory>src/test/resources/arq-glassfish-managed</directory>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-
           <!-- Download and unpack GlassFish for managed tests -->
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -159,30 +144,15 @@
     <profile>
       <id>glassfish-remote</id>
       <build>
+        <testResources>
+          <testResource>
+            <directory>src/test/resources</directory>
+          </testResource>
+          <testResource>
+            <directory>src/test/resources/arq-glassfish-remote</directory>
+          </testResource>
+        </testResources>
         <plugins>
-          <!-- Add remote arquillian.xml to test classpath -->
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <version>${build-helper-maven-plugin.version}</version>
-            <executions>
-              <execution>
-                <id>add-remote-test-resource</id>
-                <phase>generate-test-resources</phase>
-                <goals>
-                  <goal>add-test-resource</goal>
-                </goals>
-                <configuration>
-                  <resources>
-                    <resource>
-                      <directory>src/test/resources/arq-glassfish-remote</directory>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-
           <!-- Pass system properties to failsafe -->
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -202,7 +172,7 @@
       <id>glassfish8</id>
       <properties>
         <glassfish.version>8.0.4</glassfish.version>
-        <glassfish.home>glassfish8</glassfish.home>
+        <glassfish.home>${project.build.directory}/glassfish8</glassfish.home>
       </properties>
     </profile>
   </profiles>
