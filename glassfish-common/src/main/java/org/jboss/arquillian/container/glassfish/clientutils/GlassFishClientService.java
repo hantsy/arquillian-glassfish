@@ -36,7 +36,6 @@ public class GlassFishClientService implements GlassFishClient {
     private static final String WEBMODULE = "WebModule";
     private static final String SERVLET = "Servlet";
     private static final String RUNNING_STATUS = "RUNNING";
-    public static final String USER_AGENT_VALUE = "arquillian-glassfish-managed-jakarta";
 
     private String target;
 
@@ -48,7 +47,7 @@ public class GlassFishClientService implements GlassFishClient {
 
     private ServerStartegy serverInstance = null;
 
-    private GlassFishClientUtil clientUtil;
+    private GlassFishHttpClient clientUtil;
 
     private NodeAddress nodeAddress = null;
 
@@ -71,7 +70,7 @@ public class GlassFishClientService implements GlassFishClient {
         this.adminBaseUrl = adminUrlBuilder.toString();
 
         // Start up the jersey client layer
-        this.clientUtil = new GlassFishClientUtil(configuration, adminBaseUrl);
+        this.clientUtil = new GlassFishHttpClient(configuration, adminBaseUrl);
     }
 
     /**
@@ -680,7 +679,7 @@ public class GlassFishClientService implements GlassFishClient {
         this.target = target;
     }
 
-    private GlassFishClientUtil getClientUtil() {
+    private GlassFishHttpClient getClientUtil() {
         return clientUtil;
     }
 

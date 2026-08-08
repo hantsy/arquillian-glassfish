@@ -44,7 +44,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class GlassFishClientUtil {
+public class GlassFishHttpClient {
 
     /**
      * Status for a successful GlassFish exit code deployment.
@@ -59,6 +59,7 @@ public class GlassFishClientUtil {
     private static final String CSRF_HEADER = "X-Requested-By";
     private static final String CSRF_VALUE = "GlassFish REST Client";
     private static final String USER_AGENT_HEADER = "User-Agent";
+    public static final String USER_AGENT_VALUE = "arquillian-glassfish-managed-jakarta";
 
     private CommonGlassFishConfiguration configuration;
 
@@ -66,9 +67,9 @@ public class GlassFishClientUtil {
 
     private HttpClient httpClient;
 
-    private static final Logger log = Logger.getLogger(GlassFishClientUtil.class.getName());
+    private static final Logger log = Logger.getLogger(GlassFishHttpClient.class.getName());
 
-    public GlassFishClientUtil(CommonGlassFishConfiguration configuration, String adminBaseUrl) {
+    public GlassFishHttpClient(CommonGlassFishConfiguration configuration, String adminBaseUrl) {
         this.configuration = configuration;
         this.adminBaseUrl = adminBaseUrl;
         HttpClient.Builder builder = HttpClient.newBuilder()
@@ -191,7 +192,7 @@ public class GlassFishClientUtil {
         return HttpRequest.newBuilder()
             .header("Accept", "application/xml")
             .header(CSRF_HEADER, CSRF_VALUE)
-            .header(USER_AGENT_HEADER, GlassFishClientService.USER_AGENT_VALUE);
+            .header(USER_AGENT_HEADER, USER_AGENT_VALUE);
     }
 
     /**
@@ -201,7 +202,7 @@ public class GlassFishClientUtil {
         return HttpRequest.newBuilder()
             .header("Accept", "application/xml")
             .header(CSRF_HEADER, CSRF_VALUE)
-            .header(USER_AGENT_HEADER, GlassFishClientService.USER_AGENT_VALUE);
+            .header(USER_AGENT_HEADER, USER_AGENT_VALUE);
     }
 
     private HttpResponse<String> sendRequest(HttpRequest request) throws IOException, InterruptedException {
