@@ -16,15 +16,15 @@
  */
 package org.jboss.arquillian.container.glassfish.client;
 
+import jakarta.json.bind.annotation.JsonbProperty;
+
 import java.util.Map;
 
 /**
  * Typed response from GlassFish REST {@code /version} endpoint.
- * Uses Jakarta JSONB for deserialization from JSON.
  */
-public class VersionResponse {
-
-    public String message;
-    public String exit_code;
-    public Map<String, Object> extraProperties;
+public record VersionResponse(
+    String message,
+    @JsonbProperty("exit_code") String exitCode,
+    Map<String, Object> extraProperties) {
 }

@@ -20,16 +20,6 @@
  */
 package org.jboss.arquillian.container.glassfish;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.jboss.arquillian.container.glassfish.client.GlassFishClientException;
 import org.jboss.arquillian.container.glassfish.client.GlassFishHttpClient;
 import org.jboss.arquillian.container.glassfish.client.MultipartBodyPublisher;
@@ -41,6 +31,17 @@ import org.jboss.arquillian.container.spi.client.protocol.metadata.ProtocolMetaD
 import org.jboss.arquillian.container.spi.client.protocol.metadata.Servlet;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Single entry point for the GlassFish admin REST API. It encapsulates the
@@ -403,7 +404,7 @@ public class GlassFishAdminClient {
     }
 
     private String resolveWebModuleContextRoot(String componentName,
-        List<Map<String, Map<String, String>>> modules) {
+                                               List<Map<String, Map<String, String>>> modules) {
         String contextRoot = null;
         for (Map<String, Map<String, String>> module : modules) {
             Map<String, String> moduleProperties = module.get("properties");
@@ -436,7 +437,7 @@ public class GlassFishAdminClient {
      * @param httpContext - httpContext to be updated
      */
     private void resolveWebModuleSubComponents(String name, String module, String context,
-        HTTPContext httpContext) {
+                                               HTTPContext httpContext) {
         // Fetch the list of SubComponents of the application
         Map<String, String> queryParams = Map.of(
             "appname", name,
@@ -605,7 +606,8 @@ public class GlassFishAdminClient {
      * configuration
      */
     private List<String> getVirtualServers(Map<String, String> attributes) {
-        String config = attributes.get("configRef").replace("{target}", attributes.get("name"));
+        String config = attributes.get("configRef")
+            .replace("{target}", attributes.get("name"));
         Map<String, Object> virtualServersResponse = getClientUtil().GETRequest(
             VIRTUAL_SERVERS, Map.of("config", config), null);
         List<Map<String, Object>> virtualServers = (List<Map<String, Object>>) virtualServersResponse.get("children");
@@ -632,14 +634,14 @@ public class GlassFishAdminClient {
      * @return The list of all listener names associated with the provided list of virtual servers
      */
     private List<String> getNetworkListeners(Map<String, String> attributes,
-        List<String> virtualServers) {
+                                             List<String> virtualServers) {
         List<String> networkListeners = new ArrayList<String>();
         Properties properties = new Properties();
 
         for (String virtualServer : virtualServers) {
-            String virtualServerPath = VIRTUAL_SERVER.replace("{config}",
-                attributes.get("configRef")).replace(
-                "{virtualServer}", virtualServer);
+            String virtualServerPath = VIRTUAL_SERVER
+                .replace("{config}", attributes.get("configRef"))
+                .replace("{virtualServer}", virtualServer);
             Map<String, String> virtualServerAttributes = getClientUtil().getAttributes(
                 virtualServerPath);
             String listenerList = virtualServerAttributes.get("networkListeners");
@@ -667,7 +669,7 @@ public class GlassFishAdminClient {
      * returned.
      */
     private String getActiveHttpPort(Map<String, String> attributes, List<String> networkListeners,
-        boolean secure) {
+                                     boolean secure) {
         for (String networkListener : networkListeners) {
             String listenerPath = LISTENER.replace("{config}", attributes.get("configRef"))
                 .replace("{listener}",
@@ -857,7 +859,7 @@ public class GlassFishAdminClient {
             // getting the server attributes is happening too fast.  The admin server hasn't started yet.
             int count = 10;
             Map<String, String> serverAttributes = getServerAttributes(ADMINSERVER);
-            while (serverAttributes.size() == 0 && count-- > 0) {
+            while (serverAttributes.isEmpty() && count-- > 0) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException ignore) {
