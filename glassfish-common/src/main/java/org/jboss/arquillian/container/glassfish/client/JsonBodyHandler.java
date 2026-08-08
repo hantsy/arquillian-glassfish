@@ -34,16 +34,16 @@ import java.util.logging.Logger;
  * An {@link HttpResponse.BodyHandler} that parses the JSON response body
  * into a typed object and validates the GlassFish exit code for raw Map responses.
  */
-public class JsonBodyExtractor<T> implements HttpResponse.BodyHandler<T> {
+public class JsonBodyHandler<T> implements HttpResponse.BodyHandler<T> {
 
     private static final String SUCCESS = "SUCCESS";
     private static final String WARNING = "WARNING";
 
-    private static final Logger log = Logger.getLogger(JsonBodyExtractor.class.getName());
+    private static final Logger log = Logger.getLogger(JsonBodyHandler.class.getName());
 
     private final Class<T> type;
 
-    public JsonBodyExtractor(Class<T> type) {
+    public JsonBodyHandler(Class<T> type) {
         this.type = type;
     }
 

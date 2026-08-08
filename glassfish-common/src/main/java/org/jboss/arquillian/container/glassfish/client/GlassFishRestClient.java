@@ -160,7 +160,7 @@ public class GlassFishRestClient {
     public Map<String, String> getAttributes(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
         Map<String, String> attributes = new HashMap<>();
-        Map<String, Map<String, String>> extraProperties = JsonBodyExtractor.extraProperties(responseMap);
+        Map<String, Map<String, String>> extraProperties = JsonBodyHandler.extraProperties(responseMap);
         if (extraProperties != null) {
             attributes = extraProperties.get("entity");
         }
@@ -171,7 +171,7 @@ public class GlassFishRestClient {
     public Map<String, String> getChildResources(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
         Map<String, String> childResources = new HashMap<>();
-        Map<String, Object> extraProperties = JsonBodyExtractor.extraProperties(responseMap);
+        Map<String, Object> extraProperties = JsonBodyHandler.extraProperties(responseMap);
         if (extraProperties != null) {
             childResources = (Map<String, String>) extraProperties.get("childResources");
         }
@@ -182,7 +182,7 @@ public class GlassFishRestClient {
     public List<Map<String, Object>> getInstancesList(String resourceUrl) {
         Map<String, Object> responseMap = executeGet(resourceUrl, Map.class);
         List<Map<String, Object>> instancesList = new ArrayList<>();
-        Map<String, Object> extraProperties = JsonBodyExtractor.extraProperties(responseMap);
+        Map<String, Object> extraProperties = JsonBodyHandler.extraProperties(responseMap);
         if (extraProperties != null) {
             instancesList = (List<Map<String, Object>>) extraProperties.get("instanceList");
         }
@@ -301,7 +301,7 @@ public class GlassFishRestClient {
             request.headers().map().forEach((name, values) ->
                 log.info("  " + name + ": " + String.join(", ", values)));
         }
-        HttpResponse<T> response = httpClient.send(request, new JsonBodyExtractor<>(type));
+        HttpResponse<T> response = httpClient.send(request, new JsonBodyHandler<>(type));
         if (configuration.isDebugRequests()) {
             log.info("HTTP response status: " + response.statusCode());
             log.info("HTTP response body: " + response.body());
