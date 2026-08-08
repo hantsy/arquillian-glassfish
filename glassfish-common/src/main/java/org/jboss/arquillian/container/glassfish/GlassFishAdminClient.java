@@ -38,6 +38,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -269,13 +270,9 @@ public class GlassFishAdminClient {
     }
 
     /**
-     * Do deploy an application defined by a multipart form's fileds to a target server or a cluster
-     * of GlassFish 6.x
-     *
-     * @param name - name of the appliacation
-     * @param form - a form of MediaType.MULTIPART_FORM_DATA_TYPE
-     * @return subComponents - a map of SubComponents of the application
+     * Fetch the deployed application's sub-components and build the HTTP context.
      */
+    @SuppressWarnings("unchecked")
     private HTTPContext doDeploy(String name) {
         // Fetch the list of SubComponents of the application
         GlassFishResponse subComponentsResponse = restClient
@@ -287,34 +284,24 @@ public class GlassFishAdminClient {
         HTTPContext httpContext = new HTTPContext(nodeAddress.host(), port);
 
         // Add the servlets to the HTTPContext
-        String componentName;
-        String contextRoot = getApplicationContextRoot(name);
+        AtomicReference<String> contextRoot = new AtomicReference<>(getApplicationContextRoot(name));
 
         if (subComponents != null) {
-            for (var subComponent : subComponents.entrySet()) {
-                componentName = subComponent.getKey();
-                if (WEBMODULE.equals(subComponent.getValue())) {
-
-                    @SuppressWarnings("unchecked")
-                    var children = (List<Map<String, Map<String, String>>>) subComponentsResponse.extraProperties().get("children");
+            subComponents.forEach((key, value) -> {
+                if (WEBMODULE.equals(value)) {
+                    var children = (List<Map<String, Map<String, String>>>) (Object) subComponentsResponse.extraProperties().get("children");
                     // Override the application contextRoot by the webmodul's contextRoot
-                    contextRoot = resolveWebModuleContextRoot(componentName, children);
-                    resolveWebModuleSubComponents(name, componentName, contextRoot, httpContext);
-                } else if (SERVLET.equals(subComponent.getValue())) {
-                    httpContext.add(new Servlet(componentName, contextRoot));
+                    contextRoot.set(resolveWebModuleContextRoot(key, children));
+                    resolveWebModuleSubComponents(name, key, contextRoot.get(), httpContext);
+                } else if (SERVLET.equals(value)) {
+                    httpContext.add(new Servlet(key, contextRoot.get()));
                 }
-            }
+            });
         }
 
         return httpContext;
     }
 
-    /**
-     * Undeploy the component
-     *
-     * @param name - application name form 	- form that include the target & operation fields
-     * @return resultMap
-     */
     private void doUndeploy(String name) {
         restClient.undeployApplication(name, configuration.getTarget());
     }
@@ -405,7 +392,6 @@ public class GlassFishAdminClient {
         }
     }
 
-    // the REST resource path template to retrieve the list of server instances
     protected Map<String, String> getServerInstances(String target) {
         return restClient.getServerInstances(target);
     }
@@ -580,12 +566,6 @@ public class GlassFishAdminClient {
         return correctedName;
     }
 
-    /**
-     * Add the deploy form fields to the multipart form builder, based on the current configuration.
-     *
-     * @param name    - deployment name
-     * @param builder - multipart form builder
-     */
     /**
      * The GoF Strategy pattern is used to implement specific algorithm by server type (Admin,
      * Standalone or Clustered server)
