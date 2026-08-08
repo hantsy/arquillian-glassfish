@@ -17,11 +17,9 @@
 package org.jboss.arquillian.container.glassfish.test;
 
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Verifies arquillian tests can run in client mode with this REST based container.
@@ -30,7 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
  * @author <a href="http://community.jboss.org/people/dan.j.allen">Dan Allen</a>
  */
-@ExtendWith(ArquillianExtension.class)
+@ArquillianTest
 public class GlassFishDeployWarTest extends GlassFishDeploymentTestTemplate {
 
     @Deployment(testable = false)

@@ -19,17 +19,15 @@ package org.jboss.arquillian.container.glassfish.test;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import jakarta.inject.Inject;
 
-@ExtendWith(ArquillianExtension.class)
-public class CDIJarTestCase {
+@ArquillianTest
+public class SimpleCDIBeanJarTest {
 
     @Inject
     private SimpleBean foo;
@@ -37,7 +35,7 @@ public class CDIJarTestCase {
     @Deployment
     public static JavaArchive deploy() {
         return ShrinkWrap.create(JavaArchive.class, "foo.jar").addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml")
-            .addClasses(SimpleBean.class, CDIJarTestCase.class);
+            .addClasses(SimpleBean.class, SimpleCDIBeanJarTest.class);
     }
 
     @Test

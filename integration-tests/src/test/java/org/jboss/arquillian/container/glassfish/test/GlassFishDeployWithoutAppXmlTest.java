@@ -21,14 +21,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 
 /**
@@ -43,7 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
  *
  * @author Vineet Reynolds
  */
-@ExtendWith(ArquillianExtension.class)
+@ArquillianTest
 public class GlassFishDeployWithoutAppXmlTest {
 
     @Inject
