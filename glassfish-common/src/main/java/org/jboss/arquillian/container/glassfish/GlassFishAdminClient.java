@@ -74,7 +74,7 @@ public class GlassFishAdminClient {
 
     private ServerStartegy serverInstance = null;
 
-    private GlassFishRestClient clientUtil;
+    private GlassFishRestClient restClient;
 
     private NodeAddress nodeAddress = null;
 
@@ -96,7 +96,7 @@ public class GlassFishAdminClient {
         adminBaseUrl = dasAddress.getURI(configuration.isAdminHttps())
             .resolve("/management/domain").toString();
 
-        this.clientUtil = new GlassFishRestClient(configuration, adminBaseUrl);
+        this.restClient = new GlassFishRestClient(configuration, adminBaseUrl);
     }
 
     /**
@@ -744,7 +744,7 @@ public class GlassFishAdminClient {
     }
 
     private GlassFishRestClient getClientUtil() {
-        return clientUtil;
+        return restClient;
     }
 
     /**
