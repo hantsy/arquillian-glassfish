@@ -25,7 +25,7 @@ jobs:
           distribution: "temurin"
           cache: "maven"
       - name: Run GF 7 Managed Tests
-        run: ./mvnw -B verify -pl integration-tests --file pom.xml
+        run: ./mvnw -B verify -pl integration-tests -am --file pom.xml
 
   gf7-remote:
     runs-on: ubuntu-latest
@@ -51,7 +51,7 @@ jobs:
             sleep 10
           done
       - name: Run GF 7 Remote Tests
-        run: ./mvnw -B verify -pl integration-tests -Pglassfish-remote --file pom.xml
+        run: ./mvnw -B verify -pl integration-tests -am -Pglassfish-remote --file pom.xml
 
   gf8-managed:
     runs-on: ubuntu-latest
@@ -64,7 +64,7 @@ jobs:
           distribution: "temurin"
           cache: "maven"
       - name: Run GF 8 Managed Tests
-        run: ./mvnw -B verify -pl integration-tests -Pglassfish-managed,glassfish8 --file pom.xml
+        run: ./mvnw -B verify -pl integration-tests -am -Pglassfish-managed,glassfish8 --file pom.xml
 
   gf8-remote:
     runs-on: ubuntu-latest
@@ -90,4 +90,4 @@ jobs:
             sleep 10
           done
       - name: Run GF 8 Remote Tests
-        run: ./mvnw -B verify -pl integration-tests -Pglassfish-remote,glassfish8 --file pom.xml
+        run: ./mvnw -B verify -pl integration-tests -am -Pglassfish-remote,glassfish8 --file pom.xml
