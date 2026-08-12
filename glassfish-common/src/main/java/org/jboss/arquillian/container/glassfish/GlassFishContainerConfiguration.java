@@ -1,0 +1,259 @@
+/*
+ * JBoss, Home of Professional Open Source
+ * Copyright 2011, Red Hat Middleware LLC, and individual contributors
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.jboss.arquillian.container.glassfish;
+
+import java.util.Objects;
+
+import org.jboss.arquillian.container.spi.ConfigurationException;
+import org.jboss.arquillian.container.spi.client.container.ContainerConfiguration;
+
+/**
+ * The common set of properties for a GLassFish container.
+ * Extracted from the Configuration class for the remote GlassFish 3.1 container.
+ *
+ * @author Vineet Reynolds
+ */
+public class GlassFishContainerConfiguration implements ContainerConfiguration {
+
+    /** system-property: glassfish.adminHost */
+    protected String adminHost = System.getProperty("glassfish.adminHost", "localhost");
+
+    /** system-property: glassfish.adminPort */
+    protected int adminPort = Integer.getInteger("glassfish.adminPort", 4848);
+
+    /** system-property: glassfish.adminHttps */
+    protected boolean adminHttps = Boolean.getBoolean("glassfish.adminHttps");
+
+    /** system-property: glassfish.authorisation */
+    private boolean authorisation = Boolean.getBoolean("glassfish.authorisation");
+
+    /** system-property: glassfish.debugRequests */
+    private boolean debugRequests = Boolean.getBoolean("glassfish.debugRequests");
+
+    /** system-property: glassfish.adminUser */
+    private String adminUser = System.getProperty("glassfish.adminUser");
+
+    /** system-property: glassfish.adminPassword */
+    private String adminPassword = System.getProperty("glassfish.adminPassword");
+
+    /** system-property: glassfish.target */
+    private String target = System.getProperty("glassfish.target", "server");
+
+    /** system-property: glassfish.libraries */
+    private String libraries = System.getProperty("glassfish.libraries");
+
+    /** system-property: glassfish.properties */
+    private String properties = System.getProperty("glassfish.properties");
+
+    /** system-property: glassfish.type */
+    private String type = System.getProperty("glassfish.type");
+
+    /** system-property: glassfish.waitTimeMs */
+    private int waitTimeMs = Integer.getInteger("glassfish.waitTimeMs", 100);
+
+    /** system-property: glassfish.retries */
+    private int retries = Integer.getInteger("glassfish.retries", 5);
+
+    public GlassFishContainerConfiguration() {
+        super();
+    }
+
+    public String getAdminHost() {
+        return adminHost;
+    }
+
+    /**
+     * @param adminHost Glassfish Admin Server (DAS) host address. Used to build the URL for the REST request.
+     */
+    public void setAdminHost(String adminHost) {
+        this.adminHost = adminHost;
+    }
+
+    public int getAdminPort() {
+        return adminPort;
+    }
+
+    /**
+     * @param adminPort Glassfish Admin Console port. Used to build the URL for the REST request.
+     */
+    public void setAdminPort(int adminPort) {
+        this.adminPort = adminPort;
+    }
+
+    public boolean isAdminHttps() {
+        return adminHttps;
+    }
+
+    /**
+     * @param adminHttps Flag indicating the administration url uses a secure connection. Used to build the URL for the REST
+     *                   request.
+     */
+    public void setAdminHttps(boolean adminHttps) {
+        this.adminHttps = adminHttps;
+    }
+
+    public boolean isAuthorisation() {
+        return authorisation;
+    }
+
+    /**
+     * @param authorisation Flag indicating the remote server requires an admin user and password.
+     */
+    public void setAuthorisation(boolean authorisation) {
+        this.authorisation = authorisation;
+    }
+
+    public boolean isDebugRequests() {
+        return debugRequests;
+    }
+
+    /**
+     *
+     * @param debugRequests flag to enable logging of admin requests sent to GlassFish
+     */
+    public void setDebugRequests(boolean debugRequests) {
+        this.debugRequests = debugRequests;
+    }
+
+    public String getAdminUser() {
+        return adminUser;
+    }
+
+    /**
+     * @param adminUser Authorised admin user in the remote glassfish admin realm
+     */
+    public void setAdminUser(String adminUser) {
+        this.setAuthorisation(true);
+        this.adminUser = adminUser;
+    }
+
+    public String getAdminPassword() {
+        return adminPassword;
+    }
+
+    /**
+     * @param adminPassword Authorised admin user password
+     */
+    public void setAdminPassword(String adminPassword) {
+        this.adminPassword = adminPassword;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    /**
+     * @param target Specifies the target to which you are  deploying.
+     *               <p>
+     *               Valid values are:
+     *               server
+     *               Deploys the component to the default Admin Server instance.
+     *               This is the default value.
+     *               instance_name
+     *               Deploys the component to  a  particular  stand-alone
+     *               sever instance.
+     *               cluster_name
+     *               Deploys the component to every  server  instance  in
+     *               the cluster. (Though Arquillion use only one instance
+     *               to run the test case.)
+     *               <p>
+     *               The domain name as a target is not a reasonable deployment
+     *               senarion in case of testing.
+     */
+    public void setTarget(String target) {
+        this.target = target;
+    }
+
+    public String getLibraries() {
+        return libraries;
+    }
+
+    /**
+     * @param library A comma-separated list of library JAR files. Specify the
+     *                library  JAR  files by their relative or absolute paths.
+     *                Specify relative paths relative to domain-dir/lib/applibs.
+     *                <p>
+     *                The libraries are made available to the application in
+     *                the order specified.
+     */
+    public void setLibraries(String library) {
+        this.libraries = library;
+    }
+
+    public String getProperties() {
+        return properties;
+    }
+
+    /**
+     * @param properties Optional keyword-value  pairs  that  specify  additional
+     *                   properties  for the deployment. The available properties
+     *                   are determined by the implementation  of  the  component
+     *                   that  is  being deployed or redeployed.
+     */
+    public void setProperties(String properties) {
+        this.properties = properties;
+    }
+
+    public String getType() {
+        return this.type;
+    }
+
+    /**
+     * @param type The packaging archive type of the component that is
+     *             being deployed. Only possible values is: osgi
+     *             <p>
+     *             The component is packaged as an OSGi Alliance bundle.
+     *             The type option is optional. If the component is packaged
+     *             as a regular archive, omit this option.
+     */
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public int getWaitTimeMs() {
+        return waitTimeMs;
+    }
+
+    /**
+     * @param waitTimeMs Wait for next retries.
+     */
+    public void setWaitTimeMs(int waitTimeMs) {
+        this.waitTimeMs = waitTimeMs;
+    }
+
+    public int getRetries() {
+        return retries;
+    }
+
+    /**
+     * @param retries Number of times need to poll.
+     */
+    public void setRetries(int retries) {
+        this.retries = retries;
+    }
+
+    /**
+     * Validates if current configuration is valid, that is if all required
+     * properties are set and have correct values
+     */
+    public void validate() throws ConfigurationException {
+        if (isAuthorisation()) {
+            Objects.requireNonNull(getAdminUser(), "adminUser must be specified to use authorisation");
+            Objects.requireNonNull(getAdminPassword(), "adminPassword must be specified to use authorisation");
+        }
+    }
+}

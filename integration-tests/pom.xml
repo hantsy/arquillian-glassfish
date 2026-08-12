@@ -12,24 +12,13 @@
   <description>Integration tests for GlassFish Managed and Remote container adapters</description>
 
   <properties>
-    <glassfish.version>7.0.14</glassfish.version>
     <glassfish.home>${project.build.directory}/glassfish7</glassfish.home>
+    <cargo.container.id>glassfish7x</cargo.container.id>
   </properties>
 
   <dependencies>
-    <!-- Both container adapter implementations (always on classpath) -->
-    <dependency>
-      <groupId>io.github.hantsy.arquillian</groupId>
-      <artifactId>arquillian-glassfish-managed</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.github.hantsy.arquillian</groupId>
-      <artifactId>arquillian-glassfish-remote</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
+    <!-- Container adapter implementations are added per-profile to avoid
+         Multiple DeployableContainer implementations on classpath -->
 
     <!-- Arquillian JUnit5 container -->
     <dependency>
@@ -51,6 +40,13 @@
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- jakarta.inject -->
+    <dependency>
+      <groupId>jakarta.inject</groupId>
+      <artifactId>jakarta.inject-api</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -69,6 +65,11 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
+        <configuration>
+          <includes>
+            <include>**/*Test.java</include>
+          </includes>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -88,6 +89,14 @@
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
+      <dependencies>
+        <dependency>
+          <groupId>io.github.hantsy.arquillian</groupId>
+          <artifactId>arquillian-glassfish-managed</artifactId>
+          <version>${project.version}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
       <build>
         <testResources>
           <testResource>
@@ -143,6 +152,14 @@
     <!-- GlassFish Remote -->
     <profile>
       <id>glassfish-remote</id>
+      <dependencies>
+        <dependency>
+          <groupId>io.github.hantsy.arquillian</groupId>
+          <artifactId>arquillian-glassfish-remote</artifactId>
+          <version>${project.version}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
       <build>
         <testResources>
           <testResource>
@@ -153,6 +170,45 @@
           </testResource>
         </testResources>
         <plugins>
+          <!-- Start/Stop GlassFish via Cargo artifactInstaller -->
+          <plugin>
+            <groupId>org.codehaus.cargo</groupId>
+            <artifactId>cargo-maven3-plugin</artifactId>
+            <version>1.10.26</version>
+            <configuration>
+              <container>
+                <containerId>${cargo.container.id}</containerId>
+                <artifactInstaller>
+                  <groupId>org.glassfish.main.distributions</groupId>
+                  <artifactId>glassfish</artifactId>
+                  <version>${glassfish.version}</version>
+                </artifactInstaller>
+              </container>
+              <configuration>
+                <properties>
+                  <cargo.servlet.port>8080</cargo.servlet.port>
+                  <cargo.glassfish.admin.password>adminadmin</cargo.glassfish.admin.password>
+                </properties>
+              </configuration>
+            </configuration>
+            <executions>
+              <execution>
+                <id>start-glassfish</id>
+                <phase>pre-integration-test</phase>
+                <goals>
+                  <goal>start</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>stop-glassfish</id>
+                <phase>post-integration-test</phase>
+                <goals>
+                  <goal>stop</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
           <!-- Pass system properties to failsafe -->
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -173,6 +229,7 @@
       <properties>
         <glassfish.version>8.0.4</glassfish.version>
         <glassfish.home>${project.build.directory}/glassfish8</glassfish.home>
+        <cargo.container.id>glassfish8x</cargo.container.id>
       </properties>
     </profile>
   </profiles>
