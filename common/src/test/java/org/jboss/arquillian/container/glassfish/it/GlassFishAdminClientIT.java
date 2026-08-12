@@ -1,15 +1,16 @@
-package org.jboss.arquillian.container.glassfish;
+package org.jboss.arquillian.container.glassfish.it;
 
-import org.jboss.arquillian.container.glassfish.client.DeployApplicationRequest;
+import org.jboss.arquillian.container.glassfish.GlassFishAdminClient;
+import org.jboss.arquillian.container.glassfish.GlassFishContainerConfiguration;
+import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.spi.client.container.LifecycleException;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,16 +18,19 @@ import static org.junit.jupiter.api.Assertions.*;
 class GlassFishAdminClientIT {
 
     private static GlassFishAdminClient adminClient;
-    private static GlassFishContainerConfiguration config;
+    private static WebArchive war;
 
     @BeforeAll
     static void setUp() {
-        config = new GlassFishContainerConfiguration();
+        var config = new GlassFishContainerConfiguration();
         config.setAdminHost("localhost");
         config.setAdminPort(4848);
         config.setAdminUser("admin");
         config.setAdminPassword("adminadmin");
         adminClient = new GlassFishAdminClient(config);
+
+        war = ShrinkWrap.create(WebArchive.class, "hello.war")
+            .addClass(HelloServlet.class);
     }
 
     @Test
@@ -38,27 +42,22 @@ class GlassFishAdminClientIT {
 
     @Test
     @Order(2)
-    void shouldDeployHelloWorld() throws IOException {
-        try (InputStream war = getClass().getResourceAsStream("/hello.war")) {
-            assertNotNull(war, "hello.war not found in test resources");
-            var request = DeployApplicationRequest.builder("hello.war", war, "hello", "server").build();
-            var response = adminClient.restClient.deployApplication(request);
-            assertNotNull(response);
-            assertEquals("SUCCESS", response.exitCode());
-        }
+    void shouldDeployHelloWorld() throws DeploymentException {
+        var metadata = adminClient.deploy(war);
+        assertNotNull(metadata);
+        assertFalse(metadata.getContexts().isEmpty());
+
+        var httpContext = metadata.getContexts(org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext.class).stream()
+            .findFirst()
+            .orElseThrow();
+        assertNotNull(httpContext.getHost());
+        assertNotEquals(0, httpContext.getPort());
+        assertFalse(httpContext.getServlets().isEmpty());
     }
 
     @Test
     @Order(3)
-    void shouldUndeployHelloWorld() throws IOException {
-        // Uses multipart POST to /applications/application/{name}
-        // with operation=__deleteoperation — the same approach as the old
-        // Jersey-based CommonGlassFishManager.undeploy().
-        var response = adminClient.restClient.undeployApplication("hello", "server");
-        // Response may be null if GlassFish returns an empty body — that's fine,
-        // the undeploy operation succeeded if no exception was thrown.
-        if (response != null) {
-            assertEquals("SUCCESS", response.exitCode());
-        }
+    void shouldUndeployHelloWorld() throws DeploymentException {
+        adminClient.undeploy(war);
     }
 }

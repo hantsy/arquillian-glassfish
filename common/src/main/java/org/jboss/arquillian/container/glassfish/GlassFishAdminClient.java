@@ -67,7 +67,7 @@ public class GlassFishAdminClient {
 
     private ServerStrategy serverInstance = null;
 
-    final GlassFishRestClient restClient;
+    private final GlassFishRestClient restClient;
 
     private NodeAddress nodeAddress = null;
 
