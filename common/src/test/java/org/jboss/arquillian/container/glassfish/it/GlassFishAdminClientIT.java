@@ -53,11 +53,15 @@ class GlassFishAdminClientIT {
         assertNotNull(httpContext.getHost());
         assertNotEquals(0, httpContext.getPort());
         assertFalse(httpContext.getServlets().isEmpty());
+
+        var servlet = httpContext.getServlets().getFirst();
+        assertEquals("org.jboss.arquillian.container.glassfish.it.HelloServlet", servlet.getName());
+        assertEquals("/hello", servlet.getContextRoot());
     }
 
     @Test
     @Order(3)
-    void shouldUndeployHelloWorld() throws DeploymentException {
-        adminClient.undeploy(war);
+    void shouldUndeployHelloWorld() {
+        assertDoesNotThrow(() -> adminClient.undeploy(war));
     }
 }
