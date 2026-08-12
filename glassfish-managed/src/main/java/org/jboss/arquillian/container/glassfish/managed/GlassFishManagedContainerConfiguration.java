@@ -16,14 +16,12 @@
  */
 package org.jboss.arquillian.container.glassfish.managed;
 
-import java.io.File;
+import org.jboss.arquillian.container.glassfish.GlassFishContainerConfiguration;
+import org.jboss.arquillian.container.spi.ConfigurationException;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
-
-import org.jboss.arquillian.container.glassfish.CommonGlassFishConfiguration;
-import org.jboss.arquillian.container.glassfish.clientutils.GlassFishClient;
-import org.jboss.arquillian.container.spi.ConfigurationException;
 
 /**
  * Configuration for Managed GlassFish containers.
@@ -32,27 +30,44 @@ import org.jboss.arquillian.container.spi.ConfigurationException;
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
  * @author Vineet Reynolds
  */
-public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfiguration {
+public class GlassFishManagedContainerConfiguration extends GlassFishContainerConfiguration {
 
-    private String glassFishHome = System.getenv("GLASSFISH_HOME");
+    /**
+     * system-property: glassfish.glassFishHome (env: GLASSFISH_HOME takes priority)
+     */
+    private String glassFishHome = envOrProperty("GLASSFISH_HOME", "glassfish.home");
 
-    private String domain = null;
+    /**
+     * system-property: glassfish.domain
+     */
+    private String domain = System.getProperty("glassfish.domain");
 
-    private boolean outputToConsole = true;
+    /**
+     * system-property: glassfish.outputToConsole
+     */
+    private boolean outputToConsole = Boolean.parseBoolean(System.getProperty("glassfish.outputToConsole", "true"));
 
-    private boolean debug = false;
+    /**
+     * system-property: glassfish.debug
+     */
+    private boolean debug = Boolean.getBoolean("glassfish.debug");
 
-    private boolean allowConnectingToRunningServer = false;
+    /**
+     * system-property: glassfish.allowConnectingToRunningServer
+     */
+    private boolean allowConnectingToRunningServer = Boolean.getBoolean("glassfish.allowConnectingToRunningServer");
 
-    private boolean enableDerby = false;
+    /**
+     * system-property: glassfish.enableDerby
+     */
+    private boolean enableDerby = Boolean.getBoolean("glassfish.enableDerby");
 
     public String getGlassFishHome() {
         return glassFishHome;
     }
 
     /**
-     * @param glassFishHome
-     *     The local GlassFish installation directory
+     * @param glassFishHome The local GlassFish installation directory
      */
     public void setGlassFishHome(String glassFishHome) {
         this.glassFishHome = glassFishHome;
@@ -63,8 +78,7 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
     }
 
     /**
-     * @param domain
-     *     The GlassFish domain to use or the default domain if not specified
+     * @param domain The GlassFish domain to use or the default domain if not specified
      */
     public void setDomain(String domain) {
         this.domain = domain;
@@ -75,8 +89,7 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
     }
 
     /**
-     * @param outputToConsole
-     *     Show the output of the admin commands on the console. By default enabled
+     * @param outputToConsole Show the output of the admin commands on the console. By default enabled
      */
     public void setOutputToConsole(boolean outputToConsole) {
         this.outputToConsole = outputToConsole;
@@ -87,16 +100,20 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
     }
 
     /**
-     * @param debug
-     *     Flag to start the server in debug mode using standard GlassFish debug port
+     * @param debug Flag to start the server in debug mode using standard GlassFish debug port
      */
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
 
-    public File getAdminCli() {
+    private static String envOrProperty(String env, String prop) {
+        var envValue = System.getenv(env);
+        return envValue != null ? envValue : System.getProperty(prop);
+    }
+
+    public Path getAdminCli() {
         String extension = System.getProperty("os.name").toLowerCase().contains("win") ? ".bat" : "";
-        return Path.of(getGlassFishHome()).resolve(Path.of("glassfish", "bin", "asadmin" + extension)).toFile();
+        return Path.of(getGlassFishHome(), "glassfish", "bin", "asadmin" + extension);
     }
 
     public boolean isAllowConnectingToRunningServer() {
@@ -104,8 +121,7 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
     }
 
     /**
-     * @param allowConnectingToRunningServer
-     *     Allow Arquillian to use an already running GlassFish instance.
+     * @param allowConnectingToRunningServer Allow Arquillian to use an already running GlassFish instance.
      */
     public void setAllowConnectingToRunningServer(boolean allowConnectingToRunningServer) {
         this.allowConnectingToRunningServer = allowConnectingToRunningServer;
@@ -116,8 +132,7 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
     }
 
     /**
-     * @param enableDerby
-     *     Flag to start/stop the registered derby server using standard Derby port
+     * @param enableDerby Flag to start/stop the registered derby server using standard Derby port
      */
     public void setEnableDerby(boolean enableDerby) {
         this.enableDerby = enableDerby;
@@ -125,7 +140,7 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
 
     @Override
     public String getTarget() {
-        return GlassFishClient.ADMINSERVER;
+        return "server";
     }
 
     /**
@@ -140,7 +155,7 @@ public class GlassFishManagedContainerConfiguration extends CommonGlassFishConfi
                 getGlassFishHome() + " is not a valid GlassFish installation");
         }
 
-        if (!getAdminCli().isFile()) {
+        if (!Files.isRegularFile(getAdminCli())) {
             throw new IllegalArgumentException(
                 "Could not locate admin-cli.jar module in GlassFish installation: " + getGlassFishHome());
         }

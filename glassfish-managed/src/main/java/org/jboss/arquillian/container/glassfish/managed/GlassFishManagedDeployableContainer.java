@@ -16,7 +16,7 @@
  */
 package org.jboss.arquillian.container.glassfish.managed;
 
-import org.jboss.arquillian.container.glassfish.CommonGlassFishManager;
+import org.jboss.arquillian.container.glassfish.GlassFishAdminClient;
 import org.jboss.arquillian.container.spi.client.container.DeployableContainer;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.spi.client.container.LifecycleException;
@@ -37,7 +37,7 @@ public class GlassFishManagedDeployableContainer implements DeployableContainer<
 
     private GlassFishManagedContainerConfiguration configuration;
     private GlassFishServerControl serverControl;
-    private CommonGlassFishManager<GlassFishManagedContainerConfiguration> glassFishManager;
+    private GlassFishAdminClient adminClient;
     private boolean connectedToRunningServer;
 
     public Class<GlassFishManagedContainerConfiguration> getConfigurationClass() {
@@ -51,17 +51,17 @@ public class GlassFishManagedDeployableContainer implements DeployableContainer<
 
         this.configuration = configuration;
         this.serverControl = new GlassFishServerControl(configuration);
-        this.glassFishManager = new CommonGlassFishManager<>(configuration);
+        this.adminClient = new GlassFishAdminClient(configuration);
     }
 
     public void start() throws LifecycleException {
 
-        if (glassFishManager.isDASRunning()) {
+        if (adminClient.isDASRunning()) {
             if (configuration.isAllowConnectingToRunningServer()) {
                 // If we are allowed to connect to a running server,
                 // then do not issue the 'asadmin start-domain' command.
                 connectedToRunningServer = true;
-                glassFishManager.start();
+                adminClient.start();
                 return;
             } else {
                 throw new LifecycleException("The server is already running! "
@@ -74,14 +74,14 @@ public class GlassFishManagedDeployableContainer implements DeployableContainer<
         } else {
             serverControl.start();
             int i = 0;
-            while (i < configuration.getRetries() && !glassFishManager.isDASRunning()) {
+            while (i < configuration.getRetries() && !adminClient.isDASRunning()) {
                 try {
                     Thread.sleep(configuration.getWaitTimeMs());
                 } catch (InterruptedException ignore) {
                 }
                 i++;
             }
-            glassFishManager.start();
+            adminClient.start();
         }
     }
 
@@ -96,11 +96,11 @@ public class GlassFishManagedDeployableContainer implements DeployableContainer<
     }
 
     public ProtocolMetaData deploy(Archive<?> archive) throws DeploymentException {
-        return glassFishManager.deploy(archive);
+        return adminClient.deploy(archive);
     }
 
     public void undeploy(Archive<?> archive) throws DeploymentException {
-        glassFishManager.undeploy(archive);
+        adminClient.undeploy(archive);
     }
 
     public void deploy(Descriptor descriptor) throws DeploymentException {

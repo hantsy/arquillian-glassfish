@@ -4,7 +4,9 @@ on:
   push:
     paths:
       - "glassfish-*/**"
+      - "integration-tests/**"
       - "pom.xml"
+      - ".github/workflows/build.yml"
     branches:
       - master
   pull_request:
@@ -12,6 +14,11 @@ on:
       - opened
       - synchronize
       - reopened
+    paths:
+      - "glassfish-*/**"
+      - "integration-tests/**"
+      - "pom.xml"
+      - ".github/workflows/build.yml"
 
 jobs:
   build:
@@ -26,3 +33,24 @@ jobs:
           cache: "maven"
       - name: Build with Maven (skip tests)
         run: ./mvnw -B install -DskipTests --file pom.xml
+
+  integration-tests:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: "temurin"
+          cache: "maven"
+      - name: Run integration tests
+        run: ./mvnw verify -pl glassfish-common -Pintegration-tests --file pom.xml
+      - name: Upload GF7 Cargo Managed server.log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log-gf7-cargo-managed
+          path: glassfish-common/target/cargo/configurations/glassfish7x/cargo-domain/logs/server.log

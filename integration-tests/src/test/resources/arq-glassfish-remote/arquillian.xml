@@ -14,8 +14,8 @@
       <property name="adminHost">${glassfish.adminHost:localhost}</property>
       <property name="adminPort">${glassfish.adminPort:4848}</property>
       <property name="adminUser">${glassfish.adminUser:admin}</property>
-      <property name="adminPassword">${glassfish.adminPassword:}</property>
-      <property name="debugRequests">false</property>
+      <property name="adminPassword">${glassfish.adminPassword:adminadmin}</property>
+      <property name="debugRequests">true</property>
     </configuration>
   </container>
 

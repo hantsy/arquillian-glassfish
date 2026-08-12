@@ -4,7 +4,9 @@ on:
   push:
     paths:
       - "glassfish-*/**"
+      - "integration-tests/**"
       - "pom.xml"
+      - ".github/workflows/integration-tests.yml"
     branches:
       - master
   pull_request:
@@ -12,10 +14,16 @@ on:
       - opened
       - synchronize
       - reopened
+    paths:
+      - "glassfish-*/**"
+      - "integration-tests/**"
+      - "pom.xml"
+      - ".github/workflows/integration-tests.yml"
 
 jobs:
   gf7-managed:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -25,16 +33,17 @@ jobs:
           distribution: "temurin"
           cache: "maven"
       - name: Run GF 7 Managed Tests
-        run: ./mvnw -B verify -pl integration-tests --file pom.xml
+        run: ./mvnw -B verify -pl integration-tests -am --file pom.xml
+      - name: Upload GF7 Managed server.log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log-gf7-managed
+          path: integration-tests/target/glassfish7/glassfish/domains/domain1/logs/server.log
 
   gf7-remote:
     runs-on: ubuntu-latest
-    services:
-      glassfish:
-        image: omnifish/glassfish:7.0.14
-        ports:
-          - 4848:4848
-          - 8080:8080
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -43,18 +52,18 @@ jobs:
           java-version: 21
           distribution: "temurin"
           cache: "maven"
-      - name: Wait for GlassFish
-        run: |
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:4848 && break
-            echo "Waiting for GlassFish admin listener..."
-            sleep 10
-          done
       - name: Run GF 7 Remote Tests
-        run: ./mvnw -B verify -pl integration-tests -Pglassfish-remote --file pom.xml
+        run: ./mvnw -B verify -pl integration-tests -am -Pglassfish-remote --file pom.xml
+      - name: Upload GF7 Remote server.log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log-gf7-remote
+          path: integration-tests/target/cargo/configurations/glassfish7x/cargo-domain/logs/server.log
 
   gf8-managed:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -64,16 +73,17 @@ jobs:
           distribution: "temurin"
           cache: "maven"
       - name: Run GF 8 Managed Tests
-        run: ./mvnw -B verify -pl integration-tests -Pglassfish-managed,glassfish8 --file pom.xml
+        run: ./mvnw -B verify -pl integration-tests -am -Pglassfish-managed,glassfish8 --file pom.xml
+      - name: Upload GF8 Managed server.log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log-gf8-managed
+          path: integration-tests/target/glassfish8/glassfish/domains/domain1/logs/server.log
 
   gf8-remote:
     runs-on: ubuntu-latest
-    services:
-      glassfish:
-        image: ghcr.io/eclipse-ee4j/glassfish:8.0.2
-        ports:
-          - 4848:4848
-          - 8080:8080
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -82,12 +92,11 @@ jobs:
           java-version: 21
           distribution: "temurin"
           cache: "maven"
-      - name: Wait for GlassFish
-        run: |
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:4848 && break
-            echo "Waiting for GlassFish admin listener..."
-            sleep 10
-          done
       - name: Run GF 8 Remote Tests
-        run: ./mvnw -B verify -pl integration-tests -Pglassfish-remote,glassfish8 --file pom.xml
+        run: ./mvnw -B verify -pl integration-tests -am -Pglassfish-remote,glassfish8 --file pom.xml
+      - name: Upload GF8 Remote server.log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log-gf8-remote
+          path: integration-tests/target/cargo/configurations/glassfish8x/cargo-domain/logs/server.log

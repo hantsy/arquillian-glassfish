@@ -22,9 +22,8 @@ import org.jboss.arquillian.container.spi.client.container.LifecycleException;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,23 +36,16 @@ import static java.lang.Runtime.getRuntime;
  * @author <a href="http://community.jboss.org/people/dan.j.allen">Dan Allen</a>
  */
 class GlassFishServerControl {
-
-    private static final String DERBY_MISCONFIGURED_HINT =
-        "It seems that the Glassfish version you are running might have a problem starting embedded "
-            +
-            "Derby database. Please take a look at the server logs. You can also switch off 'enableDerby' property in your 'arquillian.xml' if you don't need it. For "
-            +
-            "more information please refer to relevant issues for existing workarounds: https://java.net/jira/browse/GLASSFISH-21004 "
-            +
-            "https://issues.apache.org/jira/browse/DERBY-6438";
-
-
-    // see: https://github.com/eclipse-ee4j/glassfish/issues/25729
-    private static final List<String> NO_ARGS = Collections.emptyList();
-
     private static final Logger logger = Logger.getLogger(GlassFishServerControl.class.getName());
 
-    private GlassFishManagedContainerConfiguration config;
+    private static final String DERBY_MISCONFIGURED_HINT = """
+        It seems that the Glassfish version you are running might have a problem starting embedded \
+        Derby database. Please take a look at the server logs. You can also switch off 'enableDerby' \
+        property in your 'arquillian.xml' if you don't need it. For more information please refer to \
+        relevant issues for existing workarounds: https://java.net/jira/browse/GLASSFISH-21004 \
+        https://issues.apache.org/jira/browse/DERBY-6438""";
+
+    private final GlassFishManagedContainerConfiguration config;
 
     private Thread shutdownHook;
 
@@ -68,12 +60,13 @@ class GlassFishServerControl {
             startDerbyDatabase();
         }
 
-        final List<String> args = new ArrayList<>();
-
+        var cmd = asadmin("Starting container")
+            .globalOption("--terse")
+            .subcommand("start-domain");
         if (config.isDebug()) {
-            args.add("--debug");
+            cmd.option("--debug");
         }
-        executeAdminDomainCommand("Starting container", "start-domain", args, createProcessOutputConsumer());
+        cmd.operand(config.getDomain()).execute(createProcessOutputConsumer());
     }
 
     void stop() throws LifecycleException {
@@ -88,10 +81,10 @@ class GlassFishServerControl {
     }
 
     private void stopContainer() throws LifecycleException {
-        List<String> args = new ArrayList<>();
-        // Adding this to workaround current stop failures
-        args.add("--kill");
-        executeAdminDomainCommand("Stopping container", "stop-domain", args, createProcessOutputConsumer());
+        asadmin("Stopping container").globalOption("--terse").subcommand("stop-domain")
+            .option("--kill")
+            .operand(config.getDomain())
+            .execute(createProcessOutputConsumer());
     }
 
     private void startDerbyDatabase() throws LifecycleException {
@@ -99,7 +92,7 @@ class GlassFishServerControl {
             return;
         }
         try {
-            executeAdminCommand("Starting database", "start-database", Collections.emptyList(), NO_ARGS, createProcessOutputConsumer());
+            asadmin("Starting database").globalOption("--terse").subcommand("start-database").execute(createProcessOutputConsumer());
         } catch (LifecycleException e) {
             logger.warning(DERBY_MISCONFIGURED_HINT);
             throw e;
@@ -108,7 +101,7 @@ class GlassFishServerControl {
 
     private void stopDerbyDatabase() throws LifecycleException {
         if (config.isEnableDerby()) {
-            executeAdminCommand("Stopping database", "stop-database", Collections.emptyList(),  NO_ARGS, createProcessOutputConsumer());
+            asadmin("Stopping database").globalOption("--terse").subcommand("stop-database").execute(createProcessOutputConsumer());
         }
     }
 
@@ -120,75 +113,119 @@ class GlassFishServerControl {
     }
 
     private void registerShutdownHook() {
-        shutdownHook = new Thread(new Runnable() {
-            public void run() {
-                logger.warning("Forcing container shutdown");
-                try {
-                    stopContainer();
-                    stopDerbyDatabase();
-                } catch (LifecycleException e) {
-                    logger.log(Level.SEVERE, "Failed stopping services through shutdown hook.", e);
-                }
+        shutdownHook = new Thread(() -> {
+            logger.warning("Forcing container shutdown");
+            try {
+                stopContainer();
+                stopDerbyDatabase();
+            } catch (LifecycleException e) {
+                logger.log(Level.SEVERE, "Failed stopping services through shutdown hook.", e);
             }
         });
         getRuntime().addShutdownHook(shutdownHook);
     }
 
-    private void executeAdminDomainCommand(String description, String adminCmd, List<String> args,
-        ProcessOutputConsumer consumer) throws LifecycleException {
-        if (config.getDomain() != null) {
-            args.add(config.getDomain());
-        }
-
-        executeAdminCommand(description, adminCmd, Collections.emptyList(), args, consumer);
+    private AsadminCommand.Builder asadmin(String description) {
+        return AsadminCommand.builder(description,
+            config.getAdminCli().toAbsolutePath().toString(),
+            config.isOutputToConsole());
     }
 
-    private void executeAdminCommand(String description, String command,  List<String> asadminArgs, List<String> args,
-        ProcessOutputConsumer consumer) throws LifecycleException {
-        final List<String> cmd = buildCommand(command, asadminArgs, args);
+    /**
+     * An asadmin CLI command: {@code asadmin [global-options] subcommand [options] [operands]}.
+     * Built via the phased builder returned by {@link #builder}.
+     */
+    private static final class AsadminCommand {
+        private final String description;
+        private final List<String> command;
+        private final boolean outputToConsole;
 
-        if (config.isOutputToConsole()) {
-            System.out.println(description + " using command: " + cmd.toString());
+        private AsadminCommand(String description, List<String> command, boolean outputToConsole) {
+            this.description = description;
+            this.command = command;
+            this.outputToConsole = outputToConsole;
         }
 
-        Process process = null;
-        ConsoleReader consoleReader = null;
-        int result;
-        try {
-            process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
-            consoleReader = new ConsoleReader(process, consumer);
-            new Thread(consoleReader).start();
-            result = process.waitFor();
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, description + " failed.", e);
-            throw new LifecycleException("Unable to execute " + cmd.toString(), e);
-        } catch (InterruptedException e) {
-            logger.log(Level.WARNING, description + " interrupted.", e);
-            throw new LifecycleException("Unable to execute " + cmd.toString(), e);
-        } finally {
-            if (consoleReader != null) {
-                consoleReader.close();
+        static Builder builder(String description, String asadminPath, boolean outputToConsole) {
+            return new Builder(description, asadminPath, outputToConsole);
+        }
+
+        void execute(ProcessOutputConsumer consumer) throws LifecycleException {
+            if (outputToConsole) {
+                System.out.println(description + " using command: " + command);
             }
-            if (process != null) {
+            Process process;
+            try {
+                process = new ProcessBuilder(command).redirectErrorStream(true).start();
+            } catch (IOException e) {
+                throw new LifecycleException("Unable to execute " + command, e);
+            }
+            try (var reader = new ConsoleReader(process, consumer)) {
+                Thread.startVirtualThread(reader);
+                int result = process.waitFor();
+                if (result != 0) {
+                    throw new LifecycleException("Command returned " + result + ": " + command);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new LifecycleException("Interrupted: " + description, e);
+            } finally {
                 process.destroy();
             }
         }
 
-        if (result != 0) {
-            throw new LifecycleException("Unable to execute " + cmd.toString());
+        /** Builds commands following {@code asadmin [global-options] subcommand [options] [operands]}. */
+        static final class Builder {
+            private final String description;
+            private final String asadminPath;
+            private final boolean outputToConsole;
+            private final List<String> globalOptions = new ArrayList<>();
+            private String subcommand;
+            private final List<String> options = new ArrayList<>();
+            private final List<String> operands = new ArrayList<>();
+
+            Builder(String description, String asadminPath, boolean outputToConsole) {
+                this.description = description;
+                this.asadminPath = asadminPath;
+                this.outputToConsole = outputToConsole;
+            }
+
+            Builder globalOption(String option) {
+                globalOptions.add(option);
+                return this;
+            }
+
+            Builder subcommand(String name) {
+                this.subcommand = name;
+                return this;
+            }
+
+            Builder option(String option) {
+                options.add(option);
+                return this;
+            }
+
+            Builder operand(String value) {
+                if (value != null) {
+                    operands.add(value);
+                }
+                return this;
+            }
+
+            AsadminCommand build() {
+                var cmd = new ArrayList<String>();
+                cmd.add(asadminPath);
+                cmd.addAll(globalOptions);
+                cmd.add(subcommand);
+                cmd.addAll(options);
+                cmd.addAll(operands);
+                return new AsadminCommand(description, cmd, outputToConsole);
+            }
+
+            void execute(ProcessOutputConsumer consumer) throws LifecycleException {
+                build().execute(consumer);
+            }
         }
-    }
-
-    private List<String> buildCommand(String command, List<String> asadminArgs, List<String> args) {
-        List<String> cmd = new ArrayList<>();
-        cmd.add(config.getAdminCli().getAbsolutePath());
-
-        // very concise output data in a format that is optimized for use in scripts instead of for reading by humans
-        cmd.add("--terse");
-        cmd.addAll(asadminArgs);
-        cmd.add(command);
-        cmd.addAll(args);
-        return cmd;
     }
 
     private static class ConsoleReader implements Runnable, Closeable {
@@ -198,18 +235,15 @@ class GlassFishServerControl {
         private final BufferedReader reader;
 
         private ConsoleReader(final Process process, ProcessOutputConsumer consumer) {
-            this.reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            this.reader = process.inputReader();
             this.consumer = consumer;
         }
 
         public void run() {
-            String line;
             try {
-                while ((line = reader.readLine()) != null) {
-                    consumer.consume(line);
-                }
-            } catch (IOException failOnReading) {
-                logger.log(Level.SEVERE, failOnReading.getMessage(), failOnReading);
+                reader.lines().forEach(consumer::consume);
+            } catch (UncheckedIOException failOnReading) {
+                logger.log(Level.SEVERE, failOnReading.getCause().getMessage(), failOnReading.getCause());
             }
         }
 
@@ -230,21 +264,8 @@ class GlassFishServerControl {
     }
 
     private ProcessOutputConsumer createProcessOutputConsumer() {
-        if (config.isOutputToConsole()) {
-            return new OutputLoggingConsumer();
-        }
-        return new SilentOutputConsumer();
-    }
-
-    private static class OutputLoggingConsumer implements ProcessOutputConsumer {
-        public void consume(String line) {
-            System.out.println(line);
-        }
-    }
-
-    private class SilentOutputConsumer implements ProcessOutputConsumer {
-        public void consume(String line) {
-            // noop
-        }
+        return config.isOutputToConsole()
+            ? System.out::println
+            : line -> { };
     }
 }
