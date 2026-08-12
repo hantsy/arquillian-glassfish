@@ -33,6 +33,10 @@ public record SubComponents(Map<String, Object> properties, List<ModuleInfo> chi
         }
     }
 
+    public static SubComponents empty() {
+        return new SubComponents(Map.of(), List.of());
+    }
+
     @SuppressWarnings("unchecked")
     public static SubComponents fromParsedMap(Map<String, Object> map) {
         var rawProperties = (Map<String, Object>) map.get("properties");

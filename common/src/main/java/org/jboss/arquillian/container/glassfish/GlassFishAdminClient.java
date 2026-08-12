@@ -80,6 +80,13 @@ public class GlassFishAdminClient {
 
     // GlassFish admin client constructor
     public GlassFishAdminClient(GlassFishContainerConfiguration configuration) {
+        this(configuration, createRestClient(configuration));
+    }
+
+    /**
+     * Package-private constructor for testing with a mock {@link GlassFishRestClient}.
+     */
+    GlassFishAdminClient(GlassFishContainerConfiguration configuration, GlassFishRestClient restClient) {
         this.configuration = configuration;
         this.target = configuration.getTarget();
 
@@ -87,7 +94,13 @@ public class GlassFishAdminClient {
         DASUrl = scheme + configuration.getAdminHost() + ":" + configuration.getAdminPort();
         adminBaseUrl = DASUrl + "/management/domain";
 
-        this.restClient = new GlassFishRestClient(adminBaseUrl,
+        this.restClient = restClient;
+    }
+
+    private static GlassFishRestClient createRestClient(GlassFishContainerConfiguration configuration) {
+        String scheme = configuration.isAdminHttps() ? "https://" : "http://";
+        String url = scheme + configuration.getAdminHost() + ":" + configuration.getAdminPort() + "/management/domain";
+        return new GlassFishRestClient(url,
             configuration.getAdminUser(), configuration.getAdminPassword(),
             configuration.isDebugRequests());
     }
