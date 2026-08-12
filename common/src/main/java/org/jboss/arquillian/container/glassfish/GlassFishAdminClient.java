@@ -270,7 +270,6 @@ public class GlassFishAdminClient {
         int port = nodeAddress.httpPort();
         HTTPContext httpContext = new HTTPContext(nodeAddress.host(), port);
         String contextRoot = getApplicationContextRoot(name);
-        boolean foundServlets = false;
 
         try {
             var response = restClient.getSubComponents(name);
@@ -280,10 +279,8 @@ public class GlassFishAdminClient {
                     // For EARs: resolve the web module's context root from children
                     contextRoot = resolveWebModuleContextRoot(componentName, response.children());
                     resolveWebModuleSubComponents(name, componentName, contextRoot, httpContext);
-                    foundServlets = true;
                 } else if (SERVLET.equals(entry.getValue())) {
                     httpContext.add(new Servlet(componentName, contextRoot));
-                    foundServlets = true;
                 }
             }
         } catch (GlassFishClientException e) {
@@ -293,7 +290,7 @@ public class GlassFishAdminClient {
             log.fine("Sub-component discovery failed for " + name + ": " + e.getMessage());
         }
 
-        if (!foundServlets) {
+        if (httpContext.getServlets().isEmpty()) {
             // Fallback: add the context root as a placeholder servlet so that
             // Arquillian can construct a base URI even without discovered servlets.
             // This is sufficient for testable=false tests which just need the
