@@ -72,9 +72,9 @@
   </properties>
 
   <subprojects>
-    <subproject>glassfish-common</subproject>
-    <subproject>glassfish-managed</subproject>
-    <subproject>glassfish-remote</subproject>
+    <subproject>common</subproject>
+    <subproject>managed</subproject>
+    <subproject>remote</subproject>
     <subproject>integration-tests</subproject>
   </subprojects>
 

@@ -85,7 +85,7 @@
   <profiles>
     <!-- GlassFish 7.x Managed (active by default) -->
     <profile>
-      <id>glassfish-managed</id>
+      <id>managed</id>
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
@@ -103,7 +103,7 @@
             <directory>src/test/resources</directory>
           </testResource>
           <testResource>
-            <directory>src/test/resources/arq-glassfish-managed</directory>
+            <directory>src/test/resources/arq-managed</directory>
           </testResource>
         </testResources>
         <plugins>
@@ -141,7 +141,7 @@
               <systemPropertyVariables>
                 <glassfish.home>${glassfish.home}</glassfish.home>
                 <enableDerby>false</enableDerby>
-                <arquillian.launch>glassfish-managed</arquillian.launch>
+                <arquillian.launch>managed</arquillian.launch>
               </systemPropertyVariables>
             </configuration>
           </plugin>
@@ -151,7 +151,7 @@
 
     <!-- GlassFish Remote -->
     <profile>
-      <id>glassfish-remote</id>
+      <id>remote</id>
       <dependencies>
         <dependency>
           <groupId>io.github.hantsy.arquillian</groupId>
@@ -166,7 +166,7 @@
             <directory>src/test/resources</directory>
           </testResource>
           <testResource>
-            <directory>src/test/resources/arq-glassfish-remote</directory>
+            <directory>src/test/resources/arq-remote</directory>
           </testResource>
         </testResources>
         <plugins>
@@ -215,7 +215,7 @@
             <artifactId>maven-failsafe-plugin</artifactId>
             <configuration>
               <systemPropertyVariables>
-                <arquillian.launch>glassfish-remote</arquillian.launch>
+                <arquillian.launch>remote</arquillian.launch>
               </systemPropertyVariables>
             </configuration>
           </plugin>
