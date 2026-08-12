@@ -83,7 +83,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: server-log-gf8-managed
-          path: integration-tests/target/v8/glassfish/domains/domain1/logs/server.log
+          path: integration-tests/target/glassfish8/glassfish/domains/domain1/logs/server.log
 
   gf8-remote:
     runs-on: ubuntu-latest
@@ -103,4 +103,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: server-log-gf8-remote
-          path: integration-tests/target/cargo/configurations/v8x/cargo-domain/logs/server.log
+          path: integration-tests/target/cargo/configurations/glassfish8x/cargo-domain/logs/server.log
