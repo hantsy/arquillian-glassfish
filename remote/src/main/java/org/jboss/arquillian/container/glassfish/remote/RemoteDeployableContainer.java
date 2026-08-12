@@ -37,12 +37,12 @@ import java.util.logging.Logger;
  *
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
  */
-public class RestDeployableContainer implements DeployableContainer<GlassFishContainerConfiguration> {
+public class RemoteDeployableContainer implements DeployableContainer<GlassFishContainerConfiguration> {
 
     private GlassFishContainerConfiguration configuration;
     private GlassFishAdminClient adminClient;
 
-    private static final Logger log = Logger.getLogger(RestDeployableContainer.class.getName());
+    private static final Logger log = Logger.getLogger(RemoteDeployableContainer.class.getName());
 
     public Class<GlassFishContainerConfiguration> getConfigurationClass() {
         return GlassFishContainerConfiguration.class;

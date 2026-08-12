@@ -29,6 +29,6 @@ import org.jboss.arquillian.core.spi.LoadableExtension;
 public class RemoteExtension implements LoadableExtension {
     @Override
     public void register(ExtensionBuilder builder) {
-        builder.service(DeployableContainer.class, RestDeployableContainer.class);
+        builder.service(DeployableContainer.class, RemoteDeployableContainer.class);
     }
 }
