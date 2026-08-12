@@ -12,6 +12,12 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -21,13 +27,14 @@ class GlassFishAdminClientIT {
     private static WebArchive war;
 
     @BeforeAll
-    static void setUp() {
+    static void setUp() throws LifecycleException {
         var config = new GlassFishContainerConfiguration();
         config.setAdminHost("localhost");
         config.setAdminPort(4848);
         config.setAdminUser("admin");
         config.setAdminPassword("adminadmin");
         adminClient = new GlassFishAdminClient(config);
+        adminClient.start();
 
         war = ShrinkWrap.create(WebArchive.class, "hello.war")
             .addClass(HelloServlet.class);
@@ -35,14 +42,13 @@ class GlassFishAdminClientIT {
 
     @Test
     @Order(1)
-    void shouldStartAndDiscoverTopology() throws LifecycleException {
-        adminClient.start();
+    void shouldCheckDASRunning() {
         assertTrue(adminClient.isDASRunning());
     }
 
     @Test
     @Order(2)
-    void shouldDeployHelloWorld() throws DeploymentException {
+    void shouldDeployHelloWorld() throws DeploymentException, IOException, InterruptedException {
         var metadata = adminClient.deploy(war);
         assertNotNull(metadata);
         assertFalse(metadata.getContexts().isEmpty());
@@ -57,6 +63,19 @@ class GlassFishAdminClientIT {
         var servlet = httpContext.getServlets().getFirst();
         assertEquals("org.jboss.arquillian.container.glassfish.it.HelloServlet", servlet.getName());
         assertEquals("/hello", servlet.getContextRoot());
+
+        // Verify the deployed servlet responds correctly
+        try (var httpClient = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build()) {
+            var request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/hello/hello"))
+                .GET()
+                .build();
+            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, response.statusCode());
+            assertTrue(response.body().contains("Hello from Arquillian GlassFish IT"));
+        }
     }
 
     @Test
