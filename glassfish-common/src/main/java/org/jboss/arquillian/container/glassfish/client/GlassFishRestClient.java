@@ -31,6 +31,9 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -47,6 +50,30 @@ public class GlassFishRestClient {
     private static final String CSRF_HEADER = "X-Requested-By";
     private static final String CSRF_VALUE = "GlassFish REST Client";
 
+    /**
+     * Shared executor for all {@link GlassFishRestClient} instances.
+     * Uses daemon threads so pending async tasks do not block JVM shutdown,
+     * and a fixed pool to bound resource usage — the admin REST API call volume
+     * is low (occasional deploy/undeploy/config queries), not a high-throughput
+     * service.
+     */
+    private static final int HTTP_EXECUTOR_POOL_SIZE =
+        Math.clamp(Runtime.getRuntime().availableProcessors(), 2, 8);
+
+    private static final ExecutorService HTTP_EXECUTOR =
+        Executors.newFixedThreadPool(HTTP_EXECUTOR_POOL_SIZE, new GlassFishClientThreadFactory());
+
+    private static class GlassFishClientThreadFactory implements ThreadFactory {
+        private int counter;
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "glassfish-rest-client-" + (++counter));
+            t.setDaemon(true);
+            return t;
+        }
+    }
+
     private final String adminBaseUrl;
     private final boolean debugRequests;
     private final HttpClient httpClient;
@@ -56,6 +83,8 @@ public class GlassFishRestClient {
         this.adminBaseUrl = adminBaseUrl;
         this.debugRequests = debugRequests;
         HttpClient.Builder builder = HttpClient.newBuilder()
+            .executor(HTTP_EXECUTOR)
+            .version(HttpClient.Version.HTTP_1_1)
             .followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(Duration.ofSeconds(30));
         if (adminUser != null) {
@@ -265,6 +294,7 @@ public class GlassFishRestClient {
 
     private HttpRequest.Builder newGetBuilder() {
         return HttpRequest.newBuilder()
+            .timeout(Duration.ofSeconds(30))
             .header("Accept", "application/xml")
             .header(CSRF_HEADER, CSRF_VALUE)
             .header(USER_AGENT_HEADER, USER_AGENT_VALUE);
@@ -272,6 +302,7 @@ public class GlassFishRestClient {
 
     private HttpRequest.Builder newPostBuilder() {
         return HttpRequest.newBuilder()
+            .timeout(Duration.ofSeconds(30))
             .header("Accept", "application/xml")
             .header(CSRF_HEADER, CSRF_VALUE)
             .header(USER_AGENT_HEADER, USER_AGENT_VALUE);
