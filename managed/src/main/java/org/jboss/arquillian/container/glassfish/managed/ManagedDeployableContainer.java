@@ -36,7 +36,7 @@ import org.jboss.shrinkwrap.descriptor.api.Descriptor;
 public class ManagedDeployableContainer implements DeployableContainer<ManagedContainerConfiguration> {
 
     private ManagedContainerConfiguration configuration;
-    private ServerControl serverControl;
+    private ManagedServerControl serverControl;
     private GlassFishAdminClient adminClient;
     private boolean connectedToRunningServer;
 
@@ -50,7 +50,7 @@ public class ManagedDeployableContainer implements DeployableContainer<ManagedCo
         }
 
         this.configuration = configuration;
-        this.serverControl = new ServerControl(configuration);
+        this.serverControl = new ManagedServerControl(configuration);
         this.adminClient = new GlassFishAdminClient(configuration);
     }
 

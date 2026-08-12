@@ -35,8 +35,8 @@ import static java.lang.Runtime.getRuntime;
  *
  * @author <a href="http://community.jboss.org/people/dan.j.allen">Dan Allen</a>
  */
-class ServerControl {
-    private static final Logger logger = Logger.getLogger(ServerControl.class.getName());
+class ManagedServerControl {
+    private static final Logger logger = Logger.getLogger(ManagedServerControl.class.getName());
 
     private static final String DERBY_MISCONFIGURED_HINT = """
         It seems that the Glassfish version you are running might have a problem starting embedded \
@@ -49,7 +49,7 @@ class ServerControl {
 
     private Thread shutdownHook;
 
-    ServerControl(ManagedContainerConfiguration config) {
+    ManagedServerControl(ManagedContainerConfiguration config) {
         this.config = config;
     }
 
