@@ -9,15 +9,12 @@
       <property name="deploymentExportPath">target/</property>
   </engine>
 
-  <container qualifier="glassfish-managed" default="true">
+  <container qualifier="remote" default="true">
     <configuration>
-      <property name="glassFishHome">${glassfish.home}</property>
-      <property name="adminHost">localhost</property>
-      <property name="adminPort">4848</property>
-      <property name="debug">true</property>
-      <property name="enableDerby">${enableDerby:true}</property>
-      <property name="allowConnectingToRunningServer">false</property>
-      <property name="outputToConsole">true</property>
+      <property name="adminHost">${glassfish.adminHost:localhost}</property>
+      <property name="adminPort">${glassfish.adminPort:4848}</property>
+      <property name="adminUser">${glassfish.adminUser:admin}</property>
+      <property name="adminPassword">${glassfish.adminPassword:adminadmin}</property>
       <property name="debugRequests">true</property>
     </configuration>
   </container>
