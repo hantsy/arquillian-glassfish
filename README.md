@@ -73,8 +73,8 @@ cd arquillian-container-glassfish-jakarta
 ./mvnw test
 
 # Run integration tests against a managed GlassFish v8 server
-./mvnw verify -pl integration-tests -Pmanaged,glassfish8
+./mvnw verify -pl integration-tests -Pmanaged,v8
 
 # Run integration tests (requires a running GlassFish v8 server)
-./mvnw verify -pl integration-tests -Premote,glassfish8
+./mvnw verify -pl integration-tests -Premote,v8
 ```

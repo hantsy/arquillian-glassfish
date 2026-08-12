@@ -77,13 +77,13 @@ jobs:
           distribution: "temurin"
           cache: "maven"
       - name: Run GF 8 Managed Tests
-        run: ./mvnw -B verify -pl integration-tests -am -Pmanaged,glassfish8 --file pom.xml
+        run: ./mvnw -B verify -pl integration-tests -am -Pmanaged,v8 --file pom.xml
       - name: Upload GF8 Managed server.log
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: server-log-gf8-managed
-          path: integration-tests/target/glassfish8/glassfish/domains/domain1/logs/server.log
+          path: integration-tests/target/v8/glassfish/domains/domain1/logs/server.log
 
   gf8-remote:
     runs-on: ubuntu-latest
@@ -97,10 +97,10 @@ jobs:
           distribution: "temurin"
           cache: "maven"
       - name: Run GF 8 Remote Tests
-        run: ./mvnw -B verify -pl integration-tests -am -Premote,glassfish8 --file pom.xml
+        run: ./mvnw -B verify -pl integration-tests -am -Premote,v8 --file pom.xml
       - name: Upload GF8 Remote server.log
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: server-log-gf8-remote
-          path: integration-tests/target/cargo/configurations/glassfish8x/cargo-domain/logs/server.log
+          path: integration-tests/target/cargo/configurations/v8x/cargo-domain/logs/server.log
