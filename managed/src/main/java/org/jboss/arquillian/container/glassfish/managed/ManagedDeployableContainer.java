@@ -55,15 +55,8 @@ public class ManagedDeployableContainer implements DeployableContainer<ManagedCo
     }
 
     public void start() throws LifecycleException {
-
         if (adminClient.isDASRunning()) {
-            if (configuration.isAllowConnectingToRunningServer()) {
-                // If we are allowed to connect to a running server,
-                // then do not issue the 'asadmin start-domain' command.
-                connectedToRunningServer = true;
-                adminClient.start();
-                return;
-            } else {
+            if (!configuration.isAllowConnectingToRunningServer()) {
                 throw new LifecycleException("The server is already running! "
                     + "Managed containers does not support connecting to running server instances due to the "
                     + "possible harmful effect of connecting to the wrong server. Please stop server before running or "
@@ -71,18 +64,22 @@ public class ManagedDeployableContainer implements DeployableContainer<ManagedCo
                     + "To disable this check and allow Arquillian to connect to a running server, "
                     + "set allowConnectingToRunningServer to true in the container configuration");
             }
-        } else {
-            serverControl.start();
-            int i = 0;
-            while (i < configuration.getRetries() && !adminClient.isDASRunning()) {
-                try {
-                    Thread.sleep(configuration.getWaitTimeMs());
-                } catch (InterruptedException ignore) {
-                }
-                i++;
-            }
+            // Allow connecting to a running server — skip start-domain
+            connectedToRunningServer = true;
             adminClient.start();
+            return;
         }
+
+        serverControl.start();
+        for (int i = 0; i < configuration.getRetries() && !adminClient.isDASRunning(); i++) {
+            try {
+                Thread.sleep(configuration.getWaitTimeMs());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        adminClient.start();
     }
 
     public void stop() throws LifecycleException {
