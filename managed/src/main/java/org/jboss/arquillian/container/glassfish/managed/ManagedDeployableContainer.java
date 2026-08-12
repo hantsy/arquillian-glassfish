@@ -16,6 +16,8 @@
  */
 package org.jboss.arquillian.container.glassfish.managed;
 
+import java.util.Objects;
+
 import org.jboss.arquillian.container.glassfish.GlassFishAdminClient;
 import org.jboss.arquillian.container.spi.client.container.DeployableContainer;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
@@ -45,9 +47,7 @@ public class ManagedDeployableContainer implements DeployableContainer<ManagedCo
     }
 
     public void setup(ManagedContainerConfiguration configuration) {
-        if (configuration == null) {
-            throw new IllegalArgumentException("configuration must not be null");
-        }
+        Objects.requireNonNull(configuration, "configuration must not be null");
 
         this.configuration = configuration;
         this.serverControl = new ManagedServerControl(configuration);

@@ -30,6 +30,7 @@ import org.jboss.arquillian.protocol.servlet5.v_5.ServletProtocol;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.descriptor.api.Descriptor;
 
+import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
@@ -49,9 +50,7 @@ public class RemoteDeployableContainer implements DeployableContainer<GlassFishC
     }
 
     public void setup(GlassFishContainerConfiguration configuration) {
-        if (configuration == null) {
-            throw new IllegalArgumentException("configuration must not be null");
-        }
+        Objects.requireNonNull(configuration, "configuration must not be null");
         this.configuration = configuration;
         this.adminClient = new GlassFishAdminClient(configuration);
     }
