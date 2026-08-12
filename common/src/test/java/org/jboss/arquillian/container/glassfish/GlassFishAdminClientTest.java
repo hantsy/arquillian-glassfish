@@ -42,8 +42,8 @@ class GlassFishAdminClientTest {
 
     @Test
     void shouldThrowOnNullArchive() {
-        assertThrows(IllegalArgumentException.class, () -> adminClient.deploy(null));
-        assertThrows(IllegalArgumentException.class, () -> adminClient.undeploy(null));
+        assertThrows(NullPointerException.class, () -> adminClient.deploy(null));
+        assertThrows(NullPointerException.class, () -> adminClient.undeploy(null));
     }
 
     @Test

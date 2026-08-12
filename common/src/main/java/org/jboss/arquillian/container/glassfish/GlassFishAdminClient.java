@@ -35,6 +35,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -221,9 +222,7 @@ public class GlassFishAdminClient {
      * @throws DeploymentException when the deployment fails
      */
     public ProtocolMetaData deploy(Archive<?> archive) throws DeploymentException {
-        if (archive == null) {
-            throw new IllegalArgumentException("archive must not be null");
-        }
+        Objects.requireNonNull(archive, "archive must not be null");
         final String archiveName = archive.getName();
         final String deploymentName = extractDeploymentName(archiveName);
         InputStream archiveData = archive.as(ZipExporter.class).exportAsInputStream();
@@ -251,9 +250,7 @@ public class GlassFishAdminClient {
      * @throws DeploymentException when the undeployment fails
      */
     public void undeploy(Archive<?> archive) throws DeploymentException {
-        if (archive == null) {
-            throw new IllegalArgumentException("archive must not be null");
-        }
+        Objects.requireNonNull(archive, "archive must not be null");
         String archiveName = archive.getName();
         String deploymentName = extractDeploymentName(archiveName);
         try {
