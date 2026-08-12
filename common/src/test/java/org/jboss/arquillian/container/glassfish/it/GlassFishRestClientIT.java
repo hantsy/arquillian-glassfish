@@ -21,13 +21,7 @@ class GlassFishRestClientIT {
     void shouldGetVersion() {
         var version = client.getVersion();
         assertNotNull(version);
-        // The version endpoint returns the GlassFish server version (e.g. "7.1.1").
-        // GF 7 uses camelCase (versionNumber), GF 8 uses kebab-case (version-number).
-        // Production code handles both; the field may be null on a cold server but
-        // the VersionInfo record itself is never null.
-        if (version.versionNumber() != null) {
-            assertFalse(version.versionNumber().isBlank());
-        }
+        assertNotNull(version.versionNumber());
     }
 
     @Test

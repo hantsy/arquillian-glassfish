@@ -13,7 +13,9 @@ public record VersionInfo(String versionNumber) {
         if (extraProps == null) {
             return new VersionInfo(null);
         }
-        String version = (String) extraProps.get("version-number");
+        // GF7 returns camelCase (versionNumber), GF8 returns kebab-case (version-number)
+        String version = (String) extraProps.getOrDefault("versionNumber",
+            extraProps.get("version-number"));
         return new VersionInfo(version);
     }
 }
