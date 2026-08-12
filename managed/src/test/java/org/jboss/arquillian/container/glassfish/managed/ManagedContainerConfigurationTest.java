@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class GlassFishManagedContainerConfigurationTest {
+class ManagedContainerConfigurationTest {
 
     @AfterEach
     void clearSystemProperties() {
@@ -22,7 +22,7 @@ class GlassFishManagedContainerConfigurationTest {
 
     @Test
     void shouldUseDefaultValuesWhenEnvNotSet() {
-        var config = new GlassFishManagedContainerConfiguration();
+        var config = new ManagedContainerConfiguration();
 
         assertNull(config.getGlassFishHome());
         assertNull(config.getDomain());
@@ -42,7 +42,7 @@ class GlassFishManagedContainerConfigurationTest {
         System.setProperty("glassfish.allowConnectingToRunningServer", "true");
         System.setProperty("glassfish.enableDerby", "true");
 
-        var config = new GlassFishManagedContainerConfiguration();
+        var config = new ManagedContainerConfiguration();
 
         assertEquals("/opt/glassfish7", config.getGlassFishHome());
         assertEquals("domain1", config.getDomain());

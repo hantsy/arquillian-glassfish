@@ -14,12 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
- */
-package org.jboss.arquillian.container.glassfish.remote;
+package org.jboss.arquillian.container.glassfish.managed;
 
-import org.jboss.arquillian.container.glassfish.GlassFishContainerConfiguration;
 import org.jboss.arquillian.container.glassfish.GlassFishAdminClient;
 import org.jboss.arquillian.container.spi.client.container.DeployableContainer;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
@@ -30,38 +26,69 @@ import org.jboss.arquillian.protocol.servlet5.v_5.ServletProtocol;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.descriptor.api.Descriptor;
 
-import java.util.logging.Logger;
-
 /**
- * Glassfish v6.x remote container using REST deployment.
+ * Glassfish 6.x managed container using REST deployments
  *
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
+ * @author <a href="http://community.jboss.org/people/dan.j.allen">Dan Allen</a>
+ * @author Vineet Reynolds
  */
-public class GlassFishRestDeployableContainer implements DeployableContainer<GlassFishContainerConfiguration> {
+public class ManagedDeployableContainer implements DeployableContainer<ManagedContainerConfiguration> {
 
-    private GlassFishContainerConfiguration configuration;
+    private ManagedContainerConfiguration configuration;
+    private ServerControl serverControl;
     private GlassFishAdminClient adminClient;
+    private boolean connectedToRunningServer;
 
-    private static final Logger log = Logger.getLogger(GlassFishRestDeployableContainer.class.getName());
-
-    public Class<GlassFishContainerConfiguration> getConfigurationClass() {
-        return GlassFishContainerConfiguration.class;
+    public Class<ManagedContainerConfiguration> getConfigurationClass() {
+        return ManagedContainerConfiguration.class;
     }
 
-    public void setup(GlassFishContainerConfiguration configuration) {
+    public void setup(ManagedContainerConfiguration configuration) {
         if (configuration == null) {
             throw new IllegalArgumentException("configuration must not be null");
         }
+
         this.configuration = configuration;
+        this.serverControl = new ServerControl(configuration);
         this.adminClient = new GlassFishAdminClient(configuration);
     }
 
     public void start() throws LifecycleException {
-        adminClient.start();
+
+        if (adminClient.isDASRunning()) {
+            if (configuration.isAllowConnectingToRunningServer()) {
+                // If we are allowed to connect to a running server,
+                // then do not issue the 'asadmin start-domain' command.
+                connectedToRunningServer = true;
+                adminClient.start();
+                return;
+            } else {
+                throw new LifecycleException("The server is already running! "
+                    + "Managed containers does not support connecting to running server instances due to the "
+                    + "possible harmful effect of connecting to the wrong server. Please stop server before running or "
+                    + "change to another type of container.\n"
+                    + "To disable this check and allow Arquillian to connect to a running server, "
+                    + "set allowConnectingToRunningServer to true in the container configuration");
+            }
+        } else {
+            serverControl.start();
+            int i = 0;
+            while (i < configuration.getRetries() && !adminClient.isDASRunning()) {
+                try {
+                    Thread.sleep(configuration.getWaitTimeMs());
+                } catch (InterruptedException ignore) {
+                }
+                i++;
+            }
+            adminClient.start();
+        }
     }
 
     public void stop() throws LifecycleException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        if (!connectedToRunningServer) {
+            serverControl.stop();
+        }
     }
 
     public ProtocolDescription getDefaultProtocol() {

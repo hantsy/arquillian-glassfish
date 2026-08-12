@@ -30,7 +30,7 @@ import java.util.Objects;
  * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
  * @author Vineet Reynolds
  */
-public class GlassFishManagedContainerConfiguration extends GlassFishContainerConfiguration {
+public class ManagedContainerConfiguration extends GlassFishContainerConfiguration {
 
     /**
      * system-property: glassfish.glassFishHome (env: GLASSFISH_HOME takes priority)

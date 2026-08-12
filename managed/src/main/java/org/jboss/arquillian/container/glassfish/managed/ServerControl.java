@@ -35,8 +35,8 @@ import static java.lang.Runtime.getRuntime;
  *
  * @author <a href="http://community.jboss.org/people/dan.j.allen">Dan Allen</a>
  */
-class GlassFishServerControl {
-    private static final Logger logger = Logger.getLogger(GlassFishServerControl.class.getName());
+class ServerControl {
+    private static final Logger logger = Logger.getLogger(ServerControl.class.getName());
 
     private static final String DERBY_MISCONFIGURED_HINT = """
         It seems that the Glassfish version you are running might have a problem starting embedded \
@@ -45,11 +45,11 @@ class GlassFishServerControl {
         relevant issues for existing workarounds: https://java.net/jira/browse/GLASSFISH-21004 \
         https://issues.apache.org/jira/browse/DERBY-6438""";
 
-    private final GlassFishManagedContainerConfiguration config;
+    private final ManagedContainerConfiguration config;
 
     private Thread shutdownHook;
 
-    GlassFishServerControl(GlassFishManagedContainerConfiguration config) {
+    ServerControl(ManagedContainerConfiguration config) {
         this.config = config;
     }
 
