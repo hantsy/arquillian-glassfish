@@ -72,6 +72,9 @@ cd arquillian-container-glassfish-jakarta
 # Run unit tests
 ./mvnw test
 
-# Run integration tests (requires Docker)
+# Run integration tests against a managed GlassFish v8 server
+./mvnw verify -pl integration-tests -Pglassfish-managed,glassfish8
+
+# Run integration tests (requires a running GlassFish v8 server)
 ./mvnw verify -pl integration-tests -Pglassfish-remote,glassfish8
 ```
