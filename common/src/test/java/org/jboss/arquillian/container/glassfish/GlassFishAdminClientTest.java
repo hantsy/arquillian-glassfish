@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,7 +26,7 @@ class GlassFishAdminClientTest {
     private WebArchive war;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         restClient = mock(GlassFishRestClient.class);
         var config = new GlassFishContainerConfiguration();
         config.setAdminHost("localhost");
@@ -35,12 +34,7 @@ class GlassFishAdminClientTest {
         config.setAdminUser("admin");
         config.setAdminPassword("adminadmin");
         adminClient = new GlassFishAdminClient(config, restClient);
-
-        // Set nodeAddress for deploy tests — avoids full topology discovery
-        var nodeAddress = new GlassFishAdminClient.NodeAddress("server", "localhost", 8080, 8181);
-        Field field = GlassFishAdminClient.class.getDeclaredField("nodeAddress");
-        field.setAccessible(true);
-        field.set(adminClient, nodeAddress);
+        adminClient.setNodeAddress(new GlassFishAdminClient.NodeAddress("server", "localhost", 8080, 8181));
 
         war = ShrinkWrap.create(WebArchive.class, "test.war")
             .add(new StringAsset("<html/>"), "index.html");

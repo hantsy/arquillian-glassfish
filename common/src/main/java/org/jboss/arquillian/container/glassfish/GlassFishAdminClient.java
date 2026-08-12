@@ -71,6 +71,14 @@ public class GlassFishAdminClient {
 
     private NodeAddress nodeAddress = null;
 
+    /**
+     * Package-private setter for testing. Allows tests to set a mock node address
+     * without needing to run the full topology discovery in {@link #start()}.
+     */
+    void setNodeAddress(NodeAddress nodeAddress) {
+        this.nodeAddress = nodeAddress;
+    }
+
     private int majorVersion = 6;
     private int minorVersion;
 
