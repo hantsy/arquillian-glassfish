@@ -1,1 +1,1 @@
-org.jboss.arquillian.container.glassfish.remote.Extension
+org.jboss.arquillian.container.glassfish.remote.RemoteExtension

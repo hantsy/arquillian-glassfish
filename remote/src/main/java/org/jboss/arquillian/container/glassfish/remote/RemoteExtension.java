@@ -26,7 +26,7 @@ import org.jboss.arquillian.core.spi.LoadableExtension;
  * @author <a href="mailto:aslak@redhat.com">Aslak Knutsen</a>
  * @version $Revision: $
  */
-public class Extension implements LoadableExtension {
+public class RemoteExtension implements LoadableExtension {
     @Override
     public void register(ExtensionBuilder builder) {
         builder.service(DeployableContainer.class, RestDeployableContainer.class);
