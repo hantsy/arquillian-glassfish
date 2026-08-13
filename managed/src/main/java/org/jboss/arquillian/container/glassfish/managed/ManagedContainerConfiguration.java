@@ -1,0 +1,171 @@
+/*
+ * JBoss, Home of Professional Open Source
+ * Copyright 2011, Red Hat Middleware LLC, and individual contributors
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.jboss.arquillian.container.glassfish.managed;
+
+import org.jboss.arquillian.container.glassfish.GlassFishContainerConfiguration;
+import org.jboss.arquillian.container.spi.ConfigurationException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Objects;
+
+/**
+ * Configuration for Managed GlassFish containers.
+ *
+ * @author <a href="http://community.jboss.org/people/dan.j.allen">Dan Allen</a>
+ * @author <a href="http://community.jboss.org/people/LightGuard">Jason Porter</a>
+ * @author Vineet Reynolds
+ */
+public class ManagedContainerConfiguration extends GlassFishContainerConfiguration {
+
+    /**
+     * system-property: glassfish.glassFishHome (env: GLASSFISH_HOME takes priority)
+     */
+    private String glassFishHome = envOrProperty("GLASSFISH_HOME", "glassfish.home");
+
+    /**
+     * system-property: glassfish.domain
+     */
+    private String domain = System.getProperty("glassfish.domain");
+
+    /**
+     * system-property: glassfish.outputToConsole
+     */
+    private boolean outputToConsole = Boolean.parseBoolean(System.getProperty("glassfish.outputToConsole", "true"));
+
+    /**
+     * system-property: glassfish.debug
+     */
+    private boolean debug = Boolean.getBoolean("glassfish.debug");
+
+    /**
+     * system-property: glassfish.allowConnectingToRunningServer
+     */
+    private boolean allowConnectingToRunningServer = Boolean.getBoolean("glassfish.allowConnectingToRunningServer");
+
+    /**
+     * system-property: glassfish.enableDerby
+     */
+    private boolean enableDerby = Boolean.getBoolean("glassfish.enableDerby");
+
+    public String getGlassFishHome() {
+        return glassFishHome;
+    }
+
+    /**
+     * @param glassFishHome The local GlassFish installation directory
+     */
+    public void setGlassFishHome(String glassFishHome) {
+        this.glassFishHome = glassFishHome;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    /**
+     * @param domain The GlassFish domain to use or the default domain if not specified
+     */
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public boolean isOutputToConsole() {
+        return outputToConsole;
+    }
+
+    /**
+     * @param outputToConsole Show the output of the admin commands on the console. By default enabled
+     */
+    public void setOutputToConsole(boolean outputToConsole) {
+        this.outputToConsole = outputToConsole;
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    /**
+     * @param debug Flag to start the server in debug mode using standard GlassFish debug port
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+
+    private static String envOrProperty(String env, String prop) {
+        var envValue = System.getenv(env);
+        return envValue != null ? envValue : System.getProperty(prop);
+    }
+
+    public Path getAdminCli() {
+        String extension = System.getProperty("os.name").toLowerCase().contains("win") ? ".bat" : "";
+        return Path.of(getGlassFishHome(), "glassfish", "bin", "asadmin" + extension);
+    }
+
+    public boolean isAllowConnectingToRunningServer() {
+        return allowConnectingToRunningServer;
+    }
+
+    /**
+     * @param allowConnectingToRunningServer Allow Arquillian to use an already running GlassFish instance.
+     */
+    public void setAllowConnectingToRunningServer(boolean allowConnectingToRunningServer) {
+        this.allowConnectingToRunningServer = allowConnectingToRunningServer;
+    }
+
+    public boolean isEnableDerby() {
+        return enableDerby;
+    }
+
+    /**
+     * @param enableDerby Flag to start/stop the registered derby server using standard Derby port
+     */
+    public void setEnableDerby(boolean enableDerby) {
+        this.enableDerby = enableDerby;
+    }
+
+    @Override
+    public String getTarget() {
+        return "server";
+    }
+
+    /**
+     * Validates if current configuration is valid, that is if all required
+     * properties are set and have correct values
+     */
+    public void validate() throws ConfigurationException {
+        Objects.requireNonNull(getGlassFishHome(),
+            "The property glassFishHome must be specified or the GLASSFISH_HOME environment variable must be set");
+        if (!Files.isDirectory(Path.of(getGlassFishHome(), "glassfish"))) {
+            throw new IllegalArgumentException(
+                getGlassFishHome() + " is not a valid GlassFish installation");
+        }
+
+        if (!Files.isRegularFile(getAdminCli())) {
+            throw new IllegalArgumentException(
+                "Could not locate admin-cli.jar module in GlassFish installation: " + getGlassFishHome());
+        }
+
+        if (getDomain() != null) {
+            if (!Files.isDirectory(Path.of(getGlassFishHome(), "glassfish", "domains", getDomain()))) {
+                throw new IllegalArgumentException("Invalid domain: " + getDomain());
+            }
+        }
+
+        super.validate();
+    }
+}

@@ -3,7 +3,9 @@ name: Build
 on:
   push:
     paths:
-      - "glassfish-*/**"
+      - "common/**"
+      - "managed/**"
+      - "remote/**"
       - "integration-tests/**"
       - "pom.xml"
       - ".github/workflows/build.yml"
@@ -15,7 +17,9 @@ on:
       - synchronize
       - reopened
     paths:
-      - "glassfish-*/**"
+      - "common/**"
+      - "managed/**"
+      - "remote/**"
       - "integration-tests/**"
       - "pom.xml"
       - ".github/workflows/build.yml"
@@ -47,10 +51,10 @@ jobs:
           distribution: "temurin"
           cache: "maven"
       - name: Run integration tests
-        run: ./mvnw verify -pl glassfish-common -Pintegration-tests --file pom.xml
+        run: ./mvnw verify -pl common -Pintegration-tests --file pom.xml
       - name: Upload GF7 Cargo Managed server.log
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: server-log-gf7-cargo-managed
-          path: glassfish-common/target/cargo/configurations/glassfish7x/cargo-domain/logs/server.log
+          path: common/target/cargo/configurations/glassfish7x/cargo-domain/logs/server.log

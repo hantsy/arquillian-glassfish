@@ -63,6 +63,7 @@
     <arquillian-jakarta-bom.version>10.0.0.Final</arquillian-jakarta-bom.version>
     <shrinkwrap-resolver-bom.version>3.3.2</shrinkwrap-resolver-bom.version>
     <junit-bom.version>6.0.1</junit-bom.version>
+    <mockito-bom.version>5.18.0</mockito-bom.version>
 
     <!-- Glassfish -->
     <glassfish.version>7.1.1</glassfish.version>
@@ -72,9 +73,9 @@
   </properties>
 
   <subprojects>
-    <subproject>glassfish-common</subproject>
-    <subproject>glassfish-managed</subproject>
-    <subproject>glassfish-remote</subproject>
+    <subproject>common</subproject>
+    <subproject>managed</subproject>
+    <subproject>remote</subproject>
     <subproject>integration-tests</subproject>
   </subprojects>
 
@@ -124,6 +125,14 @@
         <groupId>org.jboss.arquillian</groupId>
         <artifactId>arquillian-build</artifactId>
         <version>${arquillian.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-bom</artifactId>
+        <version>${mockito-bom.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

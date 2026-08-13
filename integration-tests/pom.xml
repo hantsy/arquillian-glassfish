@@ -85,7 +85,7 @@
   <profiles>
     <!-- GlassFish 7.x Managed (active by default) -->
     <profile>
-      <id>glassfish-managed</id>
+      <id>managed</id>
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
@@ -151,7 +151,7 @@
 
     <!-- GlassFish Remote -->
     <profile>
-      <id>glassfish-remote</id>
+      <id>remote</id>
       <dependencies>
         <dependency>
           <groupId>io.github.hantsy.arquillian</groupId>
@@ -225,7 +225,7 @@
 
     <!-- GlassFish 8.x version override -->
     <profile>
-      <id>glassfish8</id>
+      <id>v8</id>
       <properties>
         <glassfish.version>8.0.4</glassfish.version>
         <glassfish.home>${project.build.directory}/glassfish8</glassfish.home>
