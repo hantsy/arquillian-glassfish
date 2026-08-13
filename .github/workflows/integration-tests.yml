@@ -3,7 +3,7 @@ name: Integration Tests
 on:
   push:
     paths:
-            - "common/**"
+      - "common/**"
       - "managed/**"
       - "remote/**"
       - "integration-tests/**"
@@ -17,7 +17,7 @@ on:
       - synchronize
       - reopened
     paths:
-            - "common/**"
+      - "common/**"
       - "managed/**"
       - "remote/**"
       - "integration-tests/**"
