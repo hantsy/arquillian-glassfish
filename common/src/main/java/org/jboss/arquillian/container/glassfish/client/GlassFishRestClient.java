@@ -27,6 +27,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +38,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * REST client for the GlassFish admin API using {@link java.net.http.HttpClient}
@@ -63,6 +69,32 @@ public class GlassFishRestClient {
     private static final ExecutorService HTTP_EXECUTOR =
         Executors.newFixedThreadPool(HTTP_EXECUTOR_POOL_SIZE, new GlassFishClientThreadFactory());
 
+    /**
+     * Trust-all {@link TrustManager} for the GlassFish admin listener's self-signed
+     * certificate. The admin endpoint (port 4848) is served over HTTPS with a self-signed
+     * cert (as in the official eclipse-ee4j/glassfish Docker image), which the default
+     * trust store rejects. This is a test-only container adapter, so trusting the server
+     * certificate unconditionally is acceptable.
+     */
+    private static final TrustManager[] TRUST_ALL_MANAGERS = new TrustManager[] {
+        new X509TrustManager() {
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[0];
+            }
+
+            @Override
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                // trust all clients
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                // trust all servers
+            }
+        }
+    };
+
     private static class GlassFishClientThreadFactory implements ThreadFactory {
         private int counter;
 
@@ -86,11 +118,22 @@ public class GlassFishRestClient {
             .executor(HTTP_EXECUTOR)
             .version(HttpClient.Version.HTTP_1_1)
             .followRedirects(HttpClient.Redirect.NORMAL)
-            .connectTimeout(Duration.ofSeconds(30));
+            .connectTimeout(Duration.ofSeconds(30))
+            .sslContext(createTrustAllSslContext());
         if (adminUser != null) {
             builder.authenticator(new GlassFishAuthenticator(adminUser, adminPassword));
         }
         this.httpClient = builder.build();
+    }
+
+    private static SSLContext createTrustAllSslContext() {
+        try {
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, TRUST_ALL_MANAGERS, new SecureRandom());
+            return sslContext;
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to configure trust-all SSL context", e);
+        }
     }
 
     public VersionInfo getVersion() {
