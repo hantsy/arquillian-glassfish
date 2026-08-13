@@ -69,7 +69,7 @@
     <glassfish.version>7.1.1</glassfish.version>
 
     <!-- Jakarta EE API 10.0.0 -->
-    <jakartaee-bom.version>10.0.0</jakartaee-bom.version>
+    <jakartaee-bom.version>11.0.0</jakartaee-bom.version>
   </properties>
 
   <subprojects>
