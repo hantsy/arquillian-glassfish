@@ -11,11 +11,14 @@
 
   <container qualifier="glassfish-managed" default="true">
     <configuration>
-      <property name="glassFishHome">${glassfish.home}</property>
+      <!-- glassFishHome is resolved from the GLASSFISH_HOME environment variable
+           or the `glassfish.home` system property. -->
+      <!-- <property name="glassFishHome">${glassfish.home}</property> -->
       <property name="adminHost">localhost</property>
       <property name="adminPort">4848</property>
       <property name="debug">true</property>
-      <property name="enableDerby">${enableDerby:true}</property>
+      <!-- enableDerby is resolved from the `glassfish.enableDerby` system property (default false). -->
+      <!-- <property name="enableDerby">${enableDerby:true}</property> -->
       <property name="allowConnectingToRunningServer">false</property>
       <property name="outputToConsole">true</property>
       <property name="debugRequests">true</property>

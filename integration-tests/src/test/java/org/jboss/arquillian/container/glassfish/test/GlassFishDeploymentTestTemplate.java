@@ -35,7 +35,7 @@ public abstract class GlassFishDeploymentTestTemplate {
     }
 
     public static Class<?> greeterImplementationBasedOnDerbyEnabled() {
-        if (Boolean.parseBoolean(System.getProperty("enableDerby"))) {
+        if (Boolean.parseBoolean(System.getProperty("glassfish.enableDerby"))) {
             return GreeterServletWithDerby.class;
         }
         return GreeterServlet.class;

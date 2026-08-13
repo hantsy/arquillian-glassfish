@@ -140,7 +140,6 @@
             <configuration>
               <systemPropertyVariables>
                 <glassfish.home>${glassfish.home}</glassfish.home>
-                <enableDerby>false</enableDerby>
                 <arquillian.launch>glassfish-managed</arquillian.launch>
               </systemPropertyVariables>
             </configuration>
@@ -231,6 +230,27 @@
         <glassfish.home>${project.build.directory}/glassfish8</glassfish.home>
         <cargo.container.id>glassfish8x</cargo.container.id>
       </properties>
+    </profile>
+
+    <!-- Enable Derby database for managed container tests -->
+    <profile>
+      <id>enableDerby</id>
+      <properties>
+        <glassfish.enableDerby>true</glassfish.enableDerby>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <glassfish.enableDerby>${glassfish.enableDerby}</glassfish.enableDerby>
+              </systemPropertyVariables>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 </project>
