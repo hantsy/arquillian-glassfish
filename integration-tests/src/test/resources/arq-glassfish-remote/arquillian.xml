@@ -11,10 +11,10 @@
 
   <container qualifier="glassfish-remote" default="true">
     <configuration>
-      <property name="adminHost">${glassfish.adminHost:localhost}</property>
-      <property name="adminPort">${glassfish.adminPort:4848}</property>
-      <property name="adminUser">${glassfish.adminUser:admin}</property>
-      <property name="adminPassword">${glassfish.adminPassword:adminadmin}</property>
+      <property name="adminHost">localhost</property>
+      <property name="adminPort">4848</property>
+      <property name="adminUser">admin</property>
+      <property name="adminPassword">adminadmin</property>
       <property name="debugRequests">true</property>
     </configuration>
   </container>

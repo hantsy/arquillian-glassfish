@@ -104,3 +104,23 @@ jobs:
         with:
           name: server-log-gf8-remote
           path: integration-tests/target/cargo/configurations/glassfish8x/cargo-domain/logs/server.log
+
+  gf8-managed-derby:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: "temurin"
+          cache: "maven"
+      - name: Run GF 8 Managed Tests with Derby
+        run: ./mvnw -B verify -pl integration-tests -am -Pmanaged,enableDerby,v8 --file pom.xml
+      - name: Upload GF8 Managed Derby server.log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log-gf8-managed-derby
+          path: integration-tests/target/glassfish8/glassfish/domains/domain1/logs/server.log
