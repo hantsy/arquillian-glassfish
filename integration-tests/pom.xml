@@ -222,6 +222,42 @@
       </build>
     </profile>
 
+    <!-- GlassFish Remote against a Docker-provided server (no Cargo start/stop) -->
+    <profile>
+      <id>remote-docker</id>
+      <dependencies>
+        <dependency>
+          <groupId>io.github.hantsy.arquillian</groupId>
+          <artifactId>arquillian-glassfish-remote</artifactId>
+          <version>${project.version}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <testResources>
+          <testResource>
+            <directory>src/test/resources</directory>
+          </testResource>
+          <testResource>
+            <directory>src/test/resources/arq-glassfish-remote</directory>
+          </testResource>
+        </testResources>
+        <plugins>
+          <!-- Pass system properties to failsafe -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <systemPropertyVariables>
+                <arquillian.launch>glassfish-remote</arquillian.launch>
+                <glassfish.adminHttps>true</glassfish.adminHttps>
+              </systemPropertyVariables>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <!-- GlassFish 8.x version override -->
     <profile>
       <id>v8</id>
