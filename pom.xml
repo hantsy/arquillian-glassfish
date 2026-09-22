@@ -1,22 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 https://maven.apache.org/xsd/maven-4.1.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <!-- Parent -->
   <parent>
     <groupId>org.jboss</groupId>
     <artifactId>jboss-parent</artifactId>
     <version>51</version>
-    <relativePath />
+    <relativePath/>
   </parent>
-  <!-- mark this project is the root project -->
-<!--  <root>true</root>-->
-  <!-- Model Version -->
-  
-
+  <modelVersion>4.0.0</modelVersion>
   <!-- Artifact Configuration -->
   <groupId>io.github.hantsy.arquillian</groupId>
   <artifactId>arquillian-glassfish-parent</artifactId>
-  <version>7.0.15-SNAPSHOT</version>
+  <version>7.1.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>GlassFish Integration for Arquillian</name>
   <description>A personal fork of GlassFish integrations for the Arquillian Project,
@@ -56,7 +53,7 @@
     <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
     <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
-    <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
+    <central-publishing-maven-plugin.version>0.11.0</central-publishing-maven-plugin.version>
 
     <!-- Arquillian & tests -->
     <arquillian.version>1.10.0.Final</arquillian.version>
@@ -72,12 +69,12 @@
     <jakartaee-bom.version>10.0.0</jakartaee-bom.version>
   </properties>
 
-  <subprojects>
-    <subproject>common</subproject>
-    <subproject>managed</subproject>
-    <subproject>remote</subproject>
-    <subproject>integration-tests</subproject>
-  </subprojects>
+  <modules>
+    <module>common</module>
+    <module>managed</module>
+    <module>remote</module>
+    <module>integration-tests</module>
+  </modules>
 
   <dependencyManagement>
     <dependencies>
@@ -151,7 +148,7 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${maven-compiler-plugin.version}</version>
         </plugin>
-      
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
@@ -161,6 +158,16 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
           <version>${maven-shade-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.sonatype.central</groupId>
+          <artifactId>central-publishing-maven-plugin</artifactId>
+          <version>${central-publishing-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>${maven-deploy-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -174,7 +181,6 @@
           <plugin>
             <groupId>org.sonatype.central</groupId>
             <artifactId>central-publishing-maven-plugin</artifactId>
-            <version>${central-publishing-maven-plugin.version}</version>
             <extensions>true</extensions>
             <configuration>
               <publishingServerId>central</publishingServerId>

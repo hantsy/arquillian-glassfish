@@ -1,24 +1,28 @@
 name: Publish package to the Maven Central Repository
 on:
   release:
-    types: [created]
+    types: [ created ]
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up Maven Central Repository
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: 21
           distribution: "temurin"
           server-id: central
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
+          server-username-env-var: MAVEN_USERNAME
+          server-password-env-var: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+          gpg-passphrase-env-var: MAVEN_GPG_PASSPHRASE
       - name: Set version
-        run: ./mvnw versions:set -DnewVersion=${{ github.event.release.tag_name }}
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          VERSION="${TAG_NAME#v}"
+          # Updates the version inside the pom.xml file directly
+          mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
       - name: Publish package
         run: ./mvnw -P release --batch-mode install -DskipTests
         env:
