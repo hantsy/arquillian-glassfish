@@ -29,9 +29,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: 21
           distribution: "temurin"
@@ -40,7 +40,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests -am --file pom.xml
       - name: Upload GF7 Managed server.log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: server-log-gf7-managed
           path: integration-tests/target/glassfish7/glassfish/domains/domain1/logs/server.log
@@ -49,9 +49,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: 21
           distribution: "temurin"
@@ -60,7 +60,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests -am -Premote --file pom.xml
       - name: Upload GF7 Remote server.log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: server-log-gf7-remote
           path: integration-tests/target/cargo/configurations/glassfish7x/cargo-domain/logs/server.log
@@ -69,9 +69,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: 21
           distribution: "temurin"
@@ -80,7 +80,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests -am -Pmanaged,v8 --file pom.xml
       - name: Upload GF8 Managed server.log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: server-log-gf8-managed
           path: integration-tests/target/glassfish8/glassfish/domains/domain1/logs/server.log
@@ -89,9 +89,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: 21
           distribution: "temurin"
@@ -100,7 +100,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests -am -Premote,v8 --file pom.xml
       - name: Upload GF8 Remote server.log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: server-log-gf8-remote
           path: integration-tests/target/cargo/configurations/glassfish8x/cargo-domain/logs/server.log
@@ -109,9 +109,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: 21
           distribution: "temurin"
@@ -120,7 +120,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests -am -Pmanaged,enableDerby,v8 --file pom.xml
       - name: Upload GF8 Managed Derby server.log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: server-log-gf8-managed-derby
           path: integration-tests/target/glassfish8/glassfish/domains/domain1/logs/server.log
@@ -143,9 +143,9 @@ jobs:
           --health-retries 40
           --health-start-period 60s
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: 21
           distribution: "temurin"
