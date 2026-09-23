@@ -40,7 +40,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests -am --file pom.xml
       - name: Upload GF7 Managed server.log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: server-log-gf7-managed
           path: integration-tests/target/glassfish7/glassfish/domains/domain1/logs/server.log
@@ -60,7 +60,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests -am -Premote --file pom.xml
       - name: Upload GF7 Remote server.log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: server-log-gf7-remote
           path: integration-tests/target/cargo/configurations/glassfish7x/cargo-domain/logs/server.log
@@ -80,7 +80,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests -am -Pmanaged,v8 --file pom.xml
       - name: Upload GF8 Managed server.log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: server-log-gf8-managed
           path: integration-tests/target/glassfish8/glassfish/domains/domain1/logs/server.log
@@ -100,7 +100,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests -am -Premote,v8 --file pom.xml
       - name: Upload GF8 Remote server.log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: server-log-gf8-remote
           path: integration-tests/target/cargo/configurations/glassfish8x/cargo-domain/logs/server.log
@@ -120,7 +120,7 @@ jobs:
         run: ./mvnw -B verify -pl integration-tests -am -Pmanaged,enableDerby,v8 --file pom.xml
       - name: Upload GF8 Managed Derby server.log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: server-log-gf8-managed-derby
           path: integration-tests/target/glassfish8/glassfish/domains/domain1/logs/server.log
